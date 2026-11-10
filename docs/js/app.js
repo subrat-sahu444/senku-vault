@@ -643,3 +643,33 @@ function setupHUD() {
     if (state.soundEnabled) sound.playClick();
   });
 }
+
+// 9. PWA Installation & Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+
+let deferredPrompt = null;
+const installPwaBtn = document.getElementById('installPwaBtn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  if (installPwaBtn) {
+    installPwaBtn.classList.remove('hidden');
+    installPwaBtn.addEventListener('click', async () => {
+      sound.playClick();
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const choice = await deferredPrompt.userChoice;
+        if (choice && choice.outcome === 'accepted') {
+          installPwaBtn.classList.add('hidden');
+        }
+        deferredPrompt = null;
+      }
+    });
+  }
+});
+

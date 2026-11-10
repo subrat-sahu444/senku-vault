@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="senku_dark">#050B12</color>
+    <color name="senku_green">#00FF88</color>
+    <color name="senku_cyan">#00F0FF</color>
+    <color name="senku_gold">#FFD700</color>
+</resources>

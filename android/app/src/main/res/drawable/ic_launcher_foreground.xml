@@ -1,0 +1,20 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Scientific Flask Glyph in Emerald Green -->
+    <path
+        android:strokeColor="#00FF88"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M48,28 L60,28 M54,28 L54,42 L36,74 C34,78 37,82 41,82 L67,82 C71,82 74,78 72,74 L54,42" />
+    <path
+        android:fillColor="#00FF88"
+        android:pathData="M40,68 L68,68 L70,74 C71,78 68,80 65,80 L43,80 C40,80 37,78 38,74 Z" />
+    <!-- Atom Core -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M54,58m-3,0a3,3 0 1,0 6,0a3,3 0 1,0 -6,0" />
+</vector>

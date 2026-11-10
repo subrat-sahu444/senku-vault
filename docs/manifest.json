@@ -1,0 +1,19 @@
+{
+  "name": "Senku Vault • 10B% Media Downloader",
+  "short_name": "SenkuVault",
+  "description": "Download Instagram Reels, YouTube 4K & MP3, and WhatsApp Statuses easily without advertising.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#050b12",
+  "theme_color": "#00ff88",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "assets/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
