@@ -61,11 +61,14 @@
         </nav>
 
         <div class="header-actions">
-          <button class="install-pwa-btn hidden" id="installPwaBtn" title="Install Android App">
+          <a href="https://github.com/subrat-sahu444/senku-vault/releases/download/v1.0.0-apk/SenkuVault-v1.0.apk" class="install-pwa-btn" id="downloadApkBtn" title="Download Android APK" download>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-            <span>Install App</span>
+            <span>📱 Download APK</span>
+          </a>
+          <button class="icon-btn" id="apiConfigBtn" title="Backend Cloud Engine Settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
           </button>
-          <div class="status-badge" id="serverStatusBadge">
+          <div class="status-badge" id="serverStatusBadge" style="cursor: pointer;" title="Click to view engine connection details">
             <span class="status-dot pulse"></span>
             <span class="status-label">Senku Engine Online</span>
           </div>
@@ -436,6 +439,43 @@
         </div>
       </div>
     </footer>
+
+    <!-- Cloud Engine Modal -->
+    <div class="glass-modal-backdrop hidden" id="configModal">
+      <div class="glass-modal">
+        <div class="modal-header">
+          <h3>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+            <span>Senku Cloud Engine Settings</span>
+          </h3>
+          <button class="close-modal-btn" id="closeConfigBtn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-desc">
+            Senku Vault performs <strong>100% ad-free, 1-click downloads</strong> directly to your device via the Senku Engine (powered by <code>yt-dlp</code> & <code>FFmpeg</code>).
+          </p>
+          <div class="engine-options-grid" style="display:grid;gap:12px;margin-bottom:16px;">
+            <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(0,255,136,0.2);border-radius:10px;padding:12px;">
+              <strong style="color:#00ff88;">💻 Option 1: Run Locally on PC (Recommended)</strong>
+              <p style="font-size:12px;color:#aaa;margin:6px 0;">Simply double-click <code>start.bat</code> in your Senku Vault folder and open <code>http://localhost:3000</code>. All downloads run at maximum speed with zero limits!</p>
+              <button class="small-glow-btn" id="testLocalBtn" style="padding:6px 14px;font-size:12px;">🔄 Test Local Engine (127.0.0.1:3000)</button>
+              <span id="localStatusText" style="font-size:12px;margin-left:8px;"></span>
+            </div>
+            <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(0,240,255,0.2);border-radius:10px;padding:12px;">
+              <strong style="color:#00f0ff;">☁️ Option 2: 24/7 Free Cloud Backend</strong>
+              <p style="font-size:12px;color:#aaa;margin:6px 0;">Deploy your repository on <a href="https://render.com" target="_blank" rel="noopener" style="color:#00f0ff;">render.com</a> (using the included <code>Dockerfile</code>) and paste your web service URL below for 24/7 mobile access:</p>
+              <div class="modal-input-group" style="margin-top:8px;">
+                <input type="url" id="backendUrlInput" class="glass-input modal-input" placeholder="e.g. https://senku-vault.onrender.com" />
+              </div>
+              <div class="modal-actions" style="margin-top:10px;">
+                <button class="small-glow-btn" id="saveBackendBtn">Save & Connect</button>
+                <button class="clear-history-btn" id="resetBackendBtn">Reset</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
   </div>
 
