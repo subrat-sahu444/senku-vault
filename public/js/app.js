@@ -327,6 +327,10 @@ async function triggerExtract() {
       body: JSON.stringify({ url: url })
     });
 
+    if (res.status === 404 || !res.ok && res.headers.get('content-type')?.includes('text/html')) {
+      throw new Error('Static GitHub Pages Preview: Media downloading requires the Senku Engine backend. Run locally with start.bat or deploy to Render with the repository Dockerfile. (WhatsApp Status Saver is 100% active!)');
+    }
+
     const result = await res.json();
 
     if (!result.success) {
