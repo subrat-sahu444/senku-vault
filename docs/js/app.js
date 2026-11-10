@@ -1,7 +1,7 @@
 /**
  * SENKU VAULT • CORE CLIENT APPLICATION
  * High-performance, zero-ad downloader for Instagram Reels, YouTube, & WhatsApp.
- * Powered by the Senku Engine.
+ * Powered by the Senku Engine. 100% In-Platform Direct Downloads.
  */
 
 // Web Audio API Sound Feedback
@@ -148,33 +148,45 @@ document.addEventListener('DOMContentLoaded', () => {
   checkServerHealth();
 });
 
-function getApiBaseUrl() {
-  return (localStorage.getItem('senku_api_endpoint') || '').replace(/\/+$/, '');
+// Auto-detect and resolve active backend URL (Cloud or Localhost)
+async function getActiveBackendUrl() {
+  const custom = (localStorage.getItem('senku_api_endpoint') || '').replace(/\/+$/, '');
+  if (custom) return custom;
+
+  // Try same origin
+  try {
+    const res = await fetch('/api/health', { method: 'GET' });
+    const cType = res.headers.get('content-type') || '';
+    if (res.ok && cType.includes('application/json')) {
+      return '';
+    }
+  } catch (e) {}
+
+  // Auto-detect local engine if user is running start.bat on their PC
+  try {
+    const res2 = await fetch('http://127.0.0.1:3000/api/health', { method: 'GET' });
+    if (res2.ok) {
+      return 'http://127.0.0.1:3000';
+    }
+  } catch (e) {}
+
+  return null;
 }
 
 // 1. Server Health Check
 async function checkServerHealth() {
-  const apiBase = getApiBaseUrl();
-  try {
-    const res = await fetch(`${apiBase}/api/health`);
-    const cType = res.headers.get('content-type') || '';
-    if (res.ok && cType.includes('application/json')) {
-      const data = await res.json();
-      if (data && data.status === 'healthy') {
-        elements.serverStatusBadge.innerHTML = `
-          <span class="status-dot pulse"></span>
-          <span class="status-label">${apiBase ? 'Cloud Engine Online' : 'Core Ready • Ad-Free'}</span>
-        `;
-        return;
-      }
-    }
-  } catch (err) {}
-
-  // Smart Client Mode for GitHub Pages / APK
-  elements.serverStatusBadge.innerHTML = `
-    <span class="status-dot" style="background:#00f0ff;box-shadow:0 0 8px #00f0ff"></span>
-    <span class="status-label" style="color:#00f0ff">Smart Client Active</span>
-  `;
+  const backend = await getActiveBackendUrl();
+  if (backend !== null) {
+    elements.serverStatusBadge.innerHTML = `
+      <span class="status-dot pulse"></span>
+      <span class="status-label">${backend ? 'Engine Connected' : 'Core Ready • Ad-Free'}</span>
+    `;
+  } else {
+    elements.serverStatusBadge.innerHTML = `
+      <span class="status-dot" style="background:#00f0ff;box-shadow:0 0 8px #00f0ff"></span>
+      <span class="status-label" style="color:#00f0ff">Smart Mode Active</span>
+    `;
+  }
 }
 
 // 2. Navigation & Tabs
@@ -199,7 +211,6 @@ function setupNavigation() {
       }
     });
 
-    // Custom placeholder depending on active tab
     if (tabName === 'instagram') {
       elements.urlInput.placeholder = 'Paste Instagram Reel or Post URL (e.g., https://instagram.com/reel/...)...';
     } else if (tabName === 'youtube') {
@@ -321,6 +332,37 @@ function setupInputHandlers() {
     });
   }
 
+  // Open modal from status badge click
+  if (elements.serverStatusBadge && configModal) {
+    elements.serverStatusBadge.addEventListener('click', () => {
+      sound.playClick();
+      if (backendUrlInput) backendUrlInput.value = localStorage.getItem('senku_api_endpoint') || '';
+      configModal.classList.remove('hidden');
+    });
+  }
+
+  // Test local engine button in modal
+  const testLocalBtn = document.getElementById('testLocalBtn');
+  const localStatusText = document.getElementById('localStatusText');
+  if (testLocalBtn && localStatusText) {
+    testLocalBtn.addEventListener('click', async () => {
+      sound.playClick();
+      localStatusText.innerHTML = '<span style="color:#00f0ff;">Checking 127.0.0.1:3000...</span>';
+      try {
+        const res = await fetch('http://127.0.0.1:3000/api/health');
+        if (res.ok) {
+          localStatusText.innerHTML = '<span style="color:#00ff88;font-weight:bold;">✓ Local Engine Online!</span>';
+          sound.playSuccess();
+          checkServerHealth();
+        } else {
+          localStatusText.innerHTML = '<span style="color:#ff4444;">❌ Server responded with error.</span>';
+        }
+      } catch (e) {
+        localStatusText.innerHTML = '<span style="color:#ffaa00;">⚠️ Not detected. Please run start.bat!</span>';
+      }
+    });
+  }
+
   // Inline video player toggle
   elements.playPreviewBtn.addEventListener('click', () => {
     sound.playClick();
@@ -333,8 +375,7 @@ function setupInputHandlers() {
       elements.playPreviewBtn.parentElement.classList.add('hidden');
       elements.inlineVideoPlayer.play();
     } else {
-      // Direct stream not directly playable in browser, prompt download
-      showError('Preview not directly streamed for this codec. Please use the high-speed download buttons below!');
+      showError('Direct playback preview not available. Use the direct download buttons below to download!');
     }
   });
 
@@ -349,13 +390,12 @@ function setupInputHandlers() {
     });
   });
 
-  // Download Thumbnail
+  // Download Thumbnail directly
   elements.downloadThumbBtn.addEventListener('click', () => {
     sound.playClick();
     if (!state.currentMedia || !state.currentMedia.thumbnail) return;
     const a = document.createElement('a');
     a.href = state.currentMedia.thumbnail;
-    a.target = '_blank';
     a.download = `${sanitizeTitle(state.currentMedia.title)}_cover.jpg`;
     document.body.appendChild(a);
     a.click();
@@ -363,7 +403,7 @@ function setupInputHandlers() {
   });
 }
 
-// 4. Smart Client-Side Fallback Resolver (Never crashes on static hosting)
+// 4. Smart Client-Side Fallback Resolver (No third-party redirects!)
 async function resolveSmartClientMedia(url) {
   const isYouTube = url.includes('youtube.com') || url.includes('youtu.be');
   const isInstagram = url.includes('instagram.com');
@@ -393,7 +433,7 @@ async function resolveSmartClientMedia(url) {
       author: author,
       thumbnail: thumb,
       durationFormatted: 'HD Stream',
-      viewCount: 'Ready to Download',
+      viewCount: '1-Click Direct',
       platform: 'youtube',
       originalUrl: cleanVideoUrl,
       directVideoUrl: null,
@@ -404,8 +444,7 @@ async function resolveSmartClientMedia(url) {
           qualityLabel: 'Full HD 1080p (MP4)',
           type: 'video',
           ext: 'mp4',
-          filesize: 'Direct Stream',
-          directLink: `https://10downloader.com/download?v=${encodeURIComponent(cleanVideoUrl)}`
+          filesize: 'Lossless'
         },
         {
           formatId: '720p',
@@ -413,8 +452,7 @@ async function resolveSmartClientMedia(url) {
           qualityLabel: 'HD 720p (MP4)',
           type: 'video',
           ext: 'mp4',
-          filesize: 'High Speed',
-          directLink: `https://10downloader.com/download?v=${encodeURIComponent(cleanVideoUrl)}`
+          filesize: 'Fast Download'
         },
         {
           formatId: 'mp3_320',
@@ -422,8 +460,7 @@ async function resolveSmartClientMedia(url) {
           qualityLabel: 'HQ Audio 320kbps (MP3)',
           type: 'audio',
           ext: 'mp3',
-          filesize: 'Lossless Audio',
-          directLink: `https://10downloader.com/download?v=${encodeURIComponent(cleanVideoUrl)}`
+          filesize: 'Lossless Audio'
         }
       ]
     };
@@ -438,7 +475,7 @@ async function resolveSmartClientMedia(url) {
       author: 'Instagram Creator',
       thumbnail: `https://images.weserv.nl/?url=https://www.instagram.com/p/${shortcode}/media/?size=l`,
       durationFormatted: 'Reel HD',
-      viewCount: 'Ready to Download',
+      viewCount: '1-Click Direct',
       platform: 'instagram',
       originalUrl: url,
       directVideoUrl: null,
@@ -449,8 +486,7 @@ async function resolveSmartClientMedia(url) {
           qualityLabel: 'Original Quality (MP4)',
           type: 'video',
           ext: 'mp4',
-          filesize: 'Lossless MP4',
-          directLink: `https://saveig.app/en?url=${encodeURIComponent(url)}`
+          filesize: 'Lossless MP4'
         },
         {
           formatId: 'mp3_reel',
@@ -458,20 +494,18 @@ async function resolveSmartClientMedia(url) {
           qualityLabel: 'Reel Audio (MP3)',
           type: 'audio',
           ext: 'mp3',
-          filesize: 'Audio Track',
-          directLink: `https://saveig.app/en?url=${encodeURIComponent(url)}`
+          filesize: 'Audio Track'
         }
       ]
     };
   }
 
-  // Generic fallback
   return {
     title: 'Media Stream',
     author: 'Online Media',
     thumbnail: 'assets/placeholder.svg',
-    durationFormatted: 'Stream',
-    viewCount: 'Direct',
+    durationFormatted: 'Direct',
+    viewCount: '1-Click Direct',
     platform: 'generic',
     originalUrl: url,
     formats: [
@@ -481,8 +515,7 @@ async function resolveSmartClientMedia(url) {
         qualityLabel: 'Download Media (MP4)',
         type: 'video',
         ext: 'mp4',
-        filesize: 'Direct',
-        directLink: `https://10downloader.com/download?v=${encodeURIComponent(url)}`
+        filesize: 'Direct'
       }
     ]
   };
@@ -500,31 +533,30 @@ async function triggerExtract() {
   setLoading(true);
   sound.playClick();
 
-  const apiBase = getApiBaseUrl();
-
   try {
     let mediaData = null;
+    const backend = await getActiveBackendUrl();
 
-    // 1. Try backend API first (works when running node server.js or connected to Render)
-    try {
-      const res = await fetch(`${apiBase}/api/analyze`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: url })
-      });
+    // 1. Try backend API first if connected
+    if (backend !== null) {
+      try {
+        const res = await fetch(`${backend}/api/analyze`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: url })
+        });
 
-      const contentType = res.headers.get('content-type') || '';
-      if (res.ok && contentType.includes('application/json')) {
-        const json = await res.json();
-        if (json && json.success) {
-          mediaData = json.data;
+        const contentType = res.headers.get('content-type') || '';
+        if (res.ok && contentType.includes('application/json')) {
+          const json = await res.json();
+          if (json && json.success) {
+            mediaData = json.data;
+          }
         }
-      }
-    } catch (netErr) {
-      // Backend not running on this domain, fall through to Smart Client Resolver
+      } catch (netErr) {}
     }
 
-    // 2. Fallback to Smart Client-Side Resolver (avoids Unexpected Token HTML errors!)
+    // 2. Fallback to Smart Client-Side Resolver
     if (!mediaData) {
       mediaData = await resolveSmartClientMedia(url);
     }
@@ -571,7 +603,68 @@ function sanitizeTitle(str) {
   return (str || 'media').replace(/[^a-zA-Z0-9_\-\s]/g, '').trim().slice(0, 50);
 }
 
-// 6. Render Media Result
+// In-Platform Direct 1-Click File Downloader (No new pages or external redirects!)
+async function triggerDirectDownload(dlUrl, filename, card, origText) {
+  const metaSpan = card.querySelector('.fmt-meta');
+  metaSpan.textContent = '⚡ Downloading directly...';
+
+  // 1. Android APK WebView Integration
+  const isAndroidApp = navigator.userAgent.includes('SenkuVaultApp') || /Android.*Version\/[0-9.]+\s+Chrome/i.test(navigator.userAgent);
+  if (isAndroidApp) {
+    window.location.href = dlUrl;
+    setTimeout(() => {
+      metaSpan.textContent = '✓ Sent to Android Downloader!';
+      sound.playSuccess();
+      setTimeout(() => { metaSpan.textContent = origText; }, 3500);
+    }, 1200);
+    return;
+  }
+
+  // 2. HTTPS Mixed Content Handler (GitHub Pages to Localhost)
+  const isMixedContent = window.location.protocol === 'https:' && dlUrl.startsWith('http://');
+
+  if (isMixedContent) {
+    try {
+      metaSpan.textContent = '⚡ Streaming direct bytes...';
+      const res = await fetch(dlUrl);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
+
+      metaSpan.textContent = '✓ Saved to Downloads!';
+      sound.playSuccess();
+      setTimeout(() => { metaSpan.textContent = origText; }, 3500);
+      return;
+    } catch (e) {
+      console.warn('Direct stream fetch failed, falling back to direct anchor:', e);
+    }
+  }
+
+  // 3. Standard Direct File Download
+  const dlAnchor = document.createElement('a');
+  dlAnchor.href = dlUrl;
+  dlAnchor.setAttribute('download', filename);
+  dlAnchor.style.display = 'none';
+  document.body.appendChild(dlAnchor);
+  dlAnchor.click();
+
+  setTimeout(() => {
+    try { document.body.removeChild(dlAnchor); } catch(e){}
+    metaSpan.textContent = '✓ Saved to Downloads!';
+    sound.playSuccess();
+    setTimeout(() => { metaSpan.textContent = origText; }, 3500);
+  }, 1200);
+}
+
+// 6. Render Media Result & Handle 100% In-Platform Direct Downloads
 function renderMediaResult(data) {
   elements.resultCard.classList.remove('hidden');
 
@@ -602,32 +695,18 @@ function renderMediaResult(data) {
 
   elements.viewsCount.textContent = data.viewCount ? `👁️ ${data.viewCount}` : `⚡ High-Speed Extraction`;
 
-  // Render Formats
+  // Render Formats (No external website redirects!)
   elements.formatsList.innerHTML = '';
-
-  const apiBase = getApiBaseUrl();
 
   data.formats.forEach(fmt => {
     const isAudio = fmt.type === 'audio';
-    const card = document.createElement('a');
+    const card = document.createElement('div');
     card.className = `format-card ${isAudio ? 'audio-format' : ''}`;
     
-    if (fmt.directLink) {
-      // 1-Click Direct Stream / Gateway Link
-      card.href = fmt.directLink;
-      card.target = '_blank';
-      card.rel = 'noopener noreferrer';
-    } else {
-      // Native backend download link
-      const dlUrl = `${apiBase}/api/download?url=${encodeURIComponent(data.originalUrl)}&quality=${fmt.resolution}&type=${fmt.type}&title=${encodeURIComponent(data.title)}`;
-      card.href = dlUrl;
-      card.download = `${sanitizeTitle(data.title)}.${fmt.ext || (isAudio ? 'mp3' : 'mp4')}`;
-    }
-
     card.innerHTML = `
       <div class="fmt-left">
         <span class="fmt-quality">${fmt.qualityLabel}</span>
-        <span class="fmt-meta">${fmt.ext.toUpperCase()} • ${fmt.filesize || 'Lossless'}</span>
+        <span class="fmt-meta">${fmt.ext.toUpperCase()} • ${fmt.filesize || '1-Click Direct'}</span>
       </div>
       <div class="fmt-dl-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -638,16 +717,36 @@ function renderMediaResult(data) {
       </div>
     `;
 
-    card.addEventListener('click', () => {
-      sound.playSuccess();
-      recordHistory({
-        title: data.title,
-        thumbnail: data.thumbnail,
-        platform: data.platform,
-        format: fmt.qualityLabel,
-        url: card.href,
-        timestamp: Date.now()
-      });
+    // 1-Click In-Platform Direct Download Handler
+    card.addEventListener('click', async () => {
+      sound.playClick();
+      const metaSpan = card.querySelector('.fmt-meta');
+      const origText = metaSpan.textContent;
+
+      metaSpan.textContent = '⚡ Starting download...';
+      const backend = await getActiveBackendUrl();
+
+      if (backend !== null) {
+        const filename = `${sanitizeTitle(data.title)}.${fmt.ext || (isAudio ? 'mp3' : 'mp4')}`;
+        const dlUrl = `${backend}/api/download?url=${encodeURIComponent(data.originalUrl)}&quality=${fmt.resolution}&type=${fmt.type}&title=${encodeURIComponent(data.title)}`;
+
+        recordHistory({
+          title: data.title,
+          thumbnail: data.thumbnail,
+          platform: data.platform,
+          format: fmt.qualityLabel,
+          url: dlUrl,
+          timestamp: Date.now()
+        });
+
+        await triggerDirectDownload(dlUrl, filename, card, origText);
+      } else {
+        metaSpan.textContent = 'Engine Offline';
+        showError('Direct 1-Click Streaming requires the Senku Engine to be running. If on PC, run start.bat! If on mobile, connect your free Render backend in ☁️ Settings.');
+        const configModal = document.getElementById('configModal');
+        if (configModal) configModal.classList.remove('hidden');
+        setTimeout(() => { metaSpan.textContent = origText; }, 2000);
+      }
     });
 
     elements.formatsList.appendChild(card);
@@ -717,7 +816,7 @@ elements.clearHistoryBtn.addEventListener('click', () => {
   renderHistory();
 });
 
-// 8. WhatsApp Status Saver (Local .Statuses Explorer)
+// 8. WhatsApp Status Saver (Direct 1-Click on-device saving!)
 function setupWhatsAppModule() {
   const dropZone = elements.waDropZone;
   const fileInput = elements.waFileInput;
@@ -784,7 +883,7 @@ function handleWhatsAppFiles(files) {
     const overlay = document.createElement('div');
     overlay.className = 'wa-dl-overlay';
     overlay.innerHTML = `
-      <button class="wa-save-btn" title="Save Status">
+      <button class="wa-save-btn" title="Save Directly">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
           <polyline points="7 10 12 15 17 10"></polyline>
@@ -802,6 +901,7 @@ function handleWhatsAppFiles(files) {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
+      sound.playSuccess();
     });
 
     card.appendChild(overlay);
@@ -813,7 +913,6 @@ function handleWhatsAppFiles(files) {
 
 // 9. Senku Engine HUD Controls
 function setupHUD() {
-  // Senku Engine kinetic field toggle
   const engineBtn = elements.engineToggle;
   if (engineBtn) {
     engineBtn.addEventListener('click', () => {
@@ -827,7 +926,6 @@ function setupHUD() {
     });
   }
 
-  // Molecular density cycle
   elements.particleDensityToggle.addEventListener('click', () => {
     sound.playClick();
     state.particleDensityIdx = (state.particleDensityIdx + 1) % state.particleDensities.length;
@@ -839,7 +937,6 @@ function setupHUD() {
     }
   });
 
-  // Sound toggle
   elements.soundToggle.addEventListener('click', () => {
     state.soundEnabled = !state.soundEnabled;
     sound.enabled = state.soundEnabled;

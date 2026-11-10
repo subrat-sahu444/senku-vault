@@ -64,13 +64,29 @@ function getYtDlpPath() {
   return 'yt-dlp';
 }
 
+function getFfmpegDir() {
+  const commonPaths = [
+    path.join(process.env.LOCALAPPDATA || '', 'Microsoft', 'WinGet', 'Packages', 'yt-dlp.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe', 'ffmpeg-N-124716-g054dffd133-win64-gpl', 'bin'),
+    path.join(process.env.USERPROFILE || '', 'AppData', 'Local', 'Microsoft', 'WinGet', 'Packages', 'yt-dlp.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe', 'ffmpeg-N-124716-g054dffd133-win64-gpl', 'bin'),
+    path.join(process.env.LOCALAPPDATA || '', 'Microsoft', 'WinGet', 'Links'),
+    'C:\\ffmpeg\\bin'
+  ];
+  for (const p of commonPaths) {
+    try {
+      if (fs.existsSync(p)) return p;
+    } catch (e) {}
+  }
+  return null;
+}
+
 const YTDLP_BIN = getYtDlpPath();
+const FFMPEG_DIR = getFfmpegDir();
 
 // System info state
 let systemInfo = {
   ytdlp: true,
   ytdlpVersion: '2026.06.09 (WinGet)',
-  ffmpeg: true
+  ffmpeg: !!FFMPEG_DIR
 };
 
 // Helpers
@@ -157,7 +173,9 @@ const server = http.createServer((req, res) => {
         const platform = detectPlatform(url);
 
         // Run yt-dlp --dump-json
-        const args = ['--dump-json', '--no-playlist', '--no-warnings', url];
+        const args = ['--dump-json', '--no-playlist', '--no-warnings'];
+        if (FFMPEG_DIR) args.push('--ffmpeg-location', FFMPEG_DIR);
+        args.push(url);
         const child = spawn(YTDLP_BIN, args);
 
         let stdoutData = '';
@@ -289,17 +307,15 @@ const server = http.createServer((req, res) => {
     const tempFileTemplate = path.join(TEMP_DIR, `media_${fileId}.%(ext)s`);
 
     const dlArgs = ['--no-playlist', '--no-warnings'];
+    if (FFMPEG_DIR) dlArgs.push('--ffmpeg-location', FFMPEG_DIR);
 
     if (type === 'audio') {
       dlArgs.push('-x', '--audio-format', 'mp3', '--audio-quality', '0');
     } else {
       let formatSelector = 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best';
-      if (quality === '1080p') {
-        formatSelector = 'bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080][ext=mp4]/best';
-      } else if (quality === '720p') {
-        formatSelector = 'bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720][ext=mp4]/best';
-      } else if (quality === '480p') {
-        formatSelector = 'bestvideo[height<=480][ext=mp4]+bestaudio[ext=m4a]/best[height<=480][ext=mp4]/best';
+      const qNum = parseInt(quality, 10);
+      if (!isNaN(qNum) && qNum > 0) {
+        formatSelector = `bestvideo[height<=${qNum}][ext=mp4]+bestaudio[ext=m4a]/best[height<=${qNum}][ext=mp4]/best[height<=${qNum}]/best`;
       }
       dlArgs.push('-f', formatSelector, '--merge-output-format', 'mp4');
     }
@@ -324,7 +340,7 @@ const server = http.createServer((req, res) => {
             <h2 style="color: #FF4D4D;">Download Failed</h2>
             <p>Could not process download with yt-dlp.</p>
             <p style="color: #aaa; font-size: 13px;">${dlErr.slice(0, 300) || 'Check that the URL is public and valid.'}</p>
-            <a href="/" style="display: inline-block; margin-top: 20px; color: #00E5FF; text-decoration: none;">&larr; Back to Antigravity Vault</a>
+            <a href="/" style="display: inline-block; margin-top: 20px; color: #00ff88; text-decoration: none;">&larr; Back to Senku Vault</a>
           </div>
         `);
         return;
@@ -336,8 +352,10 @@ const server = http.createServer((req, res) => {
       res.writeHead(200, {
         'Content-Type': type === 'audio' ? 'audio/mpeg' : 'video/mp4',
         'Content-Length': stat.size,
-        'Content-Disposition': `attachment; filename="${encodeURIComponent(filename)}"`,
-        'Cache-Control': 'no-cache'
+        'Content-Disposition': `attachment; filename="${cleanTitle}.${ext}"; filename*=UTF-8''${encodeURIComponent(filename)}`,
+        'Cache-Control': 'no-cache',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Expose-Headers': 'Content-Disposition, Content-Length'
       });
 
       const readStream = fs.createReadStream(downloadedPath);

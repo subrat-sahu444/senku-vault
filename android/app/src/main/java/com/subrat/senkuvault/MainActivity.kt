@@ -82,7 +82,7 @@ class MainActivity : AppCompatActivity() {
             useWideViewPort = true
             loadWithOverviewMode = true
             cacheMode = WebSettings.LOAD_DEFAULT
-            userAgentString = userAgentString.replace("; wv", "") // Modern browser user-agent
+            userAgentString = "${userAgentString.replace("; wv", "")} SenkuVaultApp/1.0" // Modern browser user-agent + App ID
         }
 
         webView.webViewClient = object : WebViewClient() {
