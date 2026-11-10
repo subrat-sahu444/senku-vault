@@ -1,0 +1,22 @@
+{
+  "name": "senku-vault",
+  "version": "1.0.0",
+  "description": "Senku Vault • 10 Billion Percent Exhilarating Ad-Free Media Downloader (Instagram Reels, YouTube 4K, WhatsApp Status) powered by the Senku Engine.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "senku-vault",
+    "senku-engine",
+    "instagram-downloader",
+    "youtube-4k-downloader",
+    "whatsapp-status-saver",
+    "glassmorphism",
+    "ad-free",
+    "dr-stone"
+  ],
+  "author": "Subrat Sahu",
+  "license": "MIT"
+}

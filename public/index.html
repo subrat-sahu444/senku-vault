@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SenkuVault • 10 Billion Percent Exhilarating Media Downloader</title>
+  <meta name="description" content="Ultra-aesthetic glassmorphic downloader for Instagram Reels, YouTube 4K & MP3, and WhatsApp Statuses. Powered by the Senku Engine. 100% Ad-Free, high speed, and private.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+</head>
+<body class="senku-body">
+  <!-- Interactive Canvas Particle Field (Senku Engine Science Simulation) -->
+  <canvas id="senkuCanvas"></canvas>
+
+  <!-- Ambient Light Orbs (Emerald, Cyan, Solar Gold) -->
+  <div class="glow-orb orb-1"></div>
+  <div class="glow-orb orb-2"></div>
+  <div class="glow-orb orb-3"></div>
+
+  <!-- Main Container -->
+  <div class="app-layout">
+    
+    <!-- Header / Navbar -->
+    <header class="glass-header">
+      <div class="header-inner">
+        <div class="brand">
+          <div class="brand-cube">
+            <span class="cube-core"></span>
+          </div>
+          <div class="brand-text">
+            <span class="brand-title">SENKU<span class="gradient-text">VAULT</span></span>
+            <span class="brand-tag">v2.5 • SENKU ENGINE</span>
+          </div>
+        </div>
+
+        <nav class="nav-tabs" id="navTabs">
+          <button class="nav-tab active" data-tab="universal">
+            <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            <span>Universal</span>
+          </button>
+          <button class="nav-tab" data-tab="instagram">
+            <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+            <span>Instagram</span>
+          </button>
+          <button class="nav-tab" data-tab="youtube">
+            <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon></svg>
+            <span>YouTube 4K</span>
+          </button>
+          <button class="nav-tab" data-tab="whatsapp">
+            <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+            <span>WhatsApp Status</span>
+          </button>
+        </nav>
+
+        <div class="header-actions">
+          <div class="status-badge" id="serverStatusBadge">
+            <span class="status-dot pulse"></span>
+            <span class="status-label">Senku Engine Online</span>
+          </div>
+          <button class="icon-btn" id="historyToggleBtn" title="Download History">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <span class="badge-count" id="historyCount">0</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      
+      <!-- Hero Section -->
+      <section class="hero-section">
+        <div class="hero-pill">
+          <span class="sparkle">🧪</span>
+          <span>Kingdom of Science • 10 Billion Percent Ad-Free • Lossless Quality</span>
+        </div>
+        <h1 class="hero-title">
+          This is Exhilarating.<br>
+          <span class="gradient-text text-glow">Rule Over Your Media.</span>
+        </h1>
+        <p class="hero-subtitle">
+          Save high-res Instagram Reels, 4K YouTube videos & MP3 audio, and WhatsApp statuses seamlessly. Zero ads, zero spam, powered by the pure laws of science.
+        </p>
+      </section>
+
+      <!-- Glass Console / Downloader Core -->
+      <section class="console-wrapper">
+        <div class="glass-console">
+          
+          <!-- URL Input Bar -->
+          <div class="input-container">
+            <div class="input-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+            </div>
+            
+            <input 
+              type="url" 
+              id="mediaUrlInput" 
+              class="glass-input" 
+              placeholder="Paste Instagram Reel / Post or YouTube link here..." 
+              autocomplete="off" 
+              spellcheck="false"
+            />
+
+            <div class="input-actions">
+              <button class="action-btn text-btn" id="pasteBtn" title="Paste from clipboard">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
+                <span>Paste</span>
+              </button>
+              <button class="action-btn clear-btn hidden" id="clearBtn" title="Clear">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
+              <button class="glow-submit-btn" id="fetchBtn">
+                <span class="btn-text">Extract</span>
+                <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                <div class="loader-spinner hidden" id="btnSpinner"></div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick Suggestions / Demo Bar -->
+          <div class="quick-links">
+            <span class="ql-label">Test with 1-click:</span>
+            <button class="ql-chip" data-url="https://www.youtube.com/watch?v=aqz-KE-bpKQ">
+              <span class="chip-dot yt"></span> YouTube 4K Demo
+            </button>
+            <button class="ql-chip" data-url="https://www.youtube.com/shorts/5qap5aO4i9A">
+              <span class="chip-dot yt"></span> YouTube Shorts
+            </button>
+            <button class="ql-chip" data-url="https://www.instagram.com/reel/C-xyz12345/">
+              <span class="chip-dot ig"></span> Instagram Reel
+            </button>
+          </div>
+
+          <!-- Error Alert Banner -->
+          <div class="glass-alert hidden" id="errorAlert">
+            <div class="alert-icon">⚠️</div>
+            <div class="alert-text" id="errorAlertText">Unable to fetch media.</div>
+            <button class="alert-close" id="closeAlertBtn">&times;</button>
+          </div>
+
+          <!-- Results / Media Card (Revealed on Success) -->
+          <div class="result-card hidden" id="resultCard">
+            <div class="result-grid">
+              
+              <!-- Left: Media Preview & Player -->
+              <div class="media-preview-box">
+                <div class="preview-stage" id="previewStage">
+                  <img id="mediaThumbnail" src="" alt="Media Thumbnail" class="thumbnail-img" />
+                  <div class="preview-overlay">
+                    <button class="play-preview-btn" id="playPreviewBtn" title="Play Preview">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    </button>
+                    <span class="duration-tag" id="mediaDuration">00:00</span>
+                  </div>
+                  <video id="inlineVideoPlayer" controls class="inline-video hidden"></video>
+                </div>
+              </div>
+
+              <!-- Right: Info & Formats -->
+              <div class="media-info-box">
+                <div class="info-header">
+                  <span class="platform-badge" id="platformBadge">YOUTUBE</span>
+                  <span class="author-badge" id="authorBadge">Creator</span>
+                </div>
+                
+                <h3 class="media-title" id="mediaTitle">Media Title</h3>
+                
+                <div class="media-meta">
+                  <span id="viewsCount" class="meta-item">👁️ Views: --</span>
+                  <span class="meta-divider">•</span>
+                  <span class="meta-item safe-tag">🧪 10B% Lossless Extraction</span>
+                </div>
+
+                <div class="formats-section">
+                  <div class="formats-header">
+                    <span class="section-title">Available Formats</span>
+                    <span class="section-hint">Select a stream to download instantly:</span>
+                  </div>
+
+                  <div class="formats-list" id="formatsList">
+                    <!-- Formats dynamically injected -->
+                  </div>
+                </div>
+
+                <div class="extra-actions">
+                  <button class="secondary-btn" id="copyLinkBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    <span>Copy Video URL</span>
+                  </button>
+                  <button class="secondary-btn" id="downloadThumbBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                    <span>Cover Art (HD)</span>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Platform Specialized Features Section -->
+      
+      <!-- 1. Universal Tab View (Default) -->
+      <section class="tab-panel active" id="panel-universal">
+        <div class="features-grid">
+          <div class="glass-feature">
+            <div class="feature-icon ig-glow">📸</div>
+            <h3>Instagram Reels & Posts</h3>
+            <p>Download trending Reels, photo carousels, audio tracks, and IGTV videos in uncompressed crystal resolution with one tap.</p>
+          </div>
+          <div class="glass-feature">
+            <div class="feature-icon yt-glow">⚡</div>
+            <h3>YouTube 4K & Shorts</h3>
+            <p>Grab 4K UHD, 1080p Full HD, 60fps high-bitrate videos, or instantly extract crystal-clear 320kbps MP3 audio streams.</p>
+          </div>
+          <div class="glass-feature">
+            <div class="feature-icon wa-glow">💬</div>
+            <h3>WhatsApp Status Saver</h3>
+            <p>Save any WhatsApp contact's photo or video status before it vanishes. Works via local Android extraction or 1-click Web bookmarklet.</p>
+          </div>
+          <div class="glass-feature">
+            <div class="feature-icon ad-glow">🧪</div>
+            <h3>Pure Ad-Free Science</h3>
+            <p>Zero advertisements, zero deceptive "Download Now" scam buttons, zero malware. Clean, fast, and engineered with precision.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Instagram Tab View -->
+      <section class="tab-panel" id="panel-instagram">
+        <div class="platform-showcase">
+          <div class="showcase-content">
+            <div class="pill-badge ig-pill">Instagram Studio</div>
+            <h2>Save Reels & Carousel Posts at True High-Definition</h2>
+            <p>Instagram compresses videos in preview, but the Senku Engine reaches the original uncompressed source CDN link to give you maximum fidelity.</p>
+            <div class="steps-row">
+              <div class="step-card">
+                <span class="step-num">01</span>
+                <h4>Copy Reel Link</h4>
+                <p>In Instagram app, tap Share (<svg class="inline-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>) and choose "Copy Link".</p>
+              </div>
+              <div class="step-card">
+                <span class="step-num">02</span>
+                <h4>Paste & Extract</h4>
+                <p>Paste the link into the console above and hit Extract.</p>
+              </div>
+              <div class="step-card">
+                <span class="step-num">03</span>
+                <h4>Save Instantly</h4>
+                <p>Download the MP4 video directly into your phone or PC camera roll without watermarks.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. YouTube Tab View -->
+      <section class="tab-panel" id="panel-youtube">
+        <div class="platform-showcase">
+          <div class="showcase-content">
+            <div class="pill-badge yt-pill">YouTube 4K & MP3 Hub</div>
+            <h2>Full 4K Ultra HD & 320kbps Studio Audio</h2>
+            <p>Streamlined YouTube downloading supporting standard videos, vertical Shorts, and lossless audio extraction powered by native yt-dlp and FFmpeg.</p>
+            <div class="steps-row">
+              <div class="step-card">
+                <span class="step-num">4K</span>
+                <h4>2160p & 1080p FHD</h4>
+                <p>Full 60fps playback with merged AAC stereo audio tracks.</p>
+              </div>
+              <div class="step-card">
+                <span class="step-num">MP3</span>
+                <h4>Lossless 320kbps Audio</h4>
+                <p>Extract background music, podcasts, and speeches into MP3 format with metadata.</p>
+              </div>
+              <div class="step-card">
+                <span class="step-num">⚡</span>
+                <h4>Shorts Dedicated</h4>
+                <p>Automatic detection and full 9:16 vertical video extraction ready for re-sharing.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. WhatsApp Status Tab View -->
+      <section class="tab-panel" id="panel-whatsapp">
+        <div class="whatsapp-vault">
+          <div class="wa-header">
+            <div class="pill-badge wa-pill">WhatsApp Status Vault</div>
+            <h2>Save WhatsApp Statuses Easily (Photos & Videos)</h2>
+            <p>Because WhatsApp status media is end-to-end encrypted and ephemeral (disappears in 24 hours), statuses don't have public web URLs. Senku Vault provides two ingenious, completely ad-free solutions below:</p>
+          </div>
+
+          <div class="wa-solutions-grid">
+            
+            <!-- Solution A: Local .Statuses Explorer -->
+            <div class="wa-solution-card">
+              <div class="card-tag">METHOD 1: INSTANT BROWSER VIEWER</div>
+              <div class="sol-icon">📁</div>
+              <h3>Load Cached WhatsApp Statuses</h3>
+              <p>When you view any status in WhatsApp, your phone automatically saves it locally in a hidden <code>.Statuses</code> cache. Select your status files or folder to preview and save them in one click!</p>
+              
+              <div class="drop-zone" id="waDropZone">
+                <svg class="drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                <p class="drop-text">Drag & drop WhatsApp status files here, or</p>
+                <label class="drop-file-btn">
+                  <span>Browse Status Files</span>
+                  <input type="file" id="waFileInput" multiple accept="image/*,video/*" class="file-hidden" />
+                </label>
+                <span class="drop-hint">Android Path: <code>Internal Storage/Android/media/com.whatsapp/WhatsApp/Media/.Statuses</code></span>
+              </div>
+
+              <!-- WhatsApp Local Gallery -->
+              <div class="wa-gallery hidden" id="waGallery">
+                <div class="gallery-controls">
+                  <span id="galleryCount">0 Statuses Loaded</span>
+                  <button class="small-glow-btn" id="downloadAllWaBtn">Download All as ZIP</button>
+                </div>
+                <div class="wa-items-grid" id="waItemsGrid"></div>
+              </div>
+            </div>
+
+            <!-- Solution B: WhatsApp Web Live Bookmarklet -->
+            <div class="wa-solution-card">
+              <div class="card-tag">METHOD 2: WHATSAPP WEB 1-CLICK</div>
+              <div class="sol-icon">⚡</div>
+              <h3>1-Click WhatsApp Web Extractor</h3>
+              <p>Download statuses directly while browsing on <strong>web.whatsapp.com</strong> with zero third-party software!</p>
+              
+              <div class="bookmarklet-box">
+                <p class="bm-instructions">
+                  <strong>How to use:</strong><br>
+                  1. Drag this button to your browser's Bookmarks bar:<br>
+                </p>
+                
+                <div class="bm-drag-area">
+                  <a href="javascript:(function(){const v=Array.from(document.querySelectorAll('video')).map(e=>e.src).filter(Boolean);const i=Array.from(document.querySelectorAll('img[src*=&quot;blob:&quot;],img[src*=&quot;whatsapp&quot;]')).map(e=>e.src).filter(Boolean);const m=[...new Set([...v,...i])];if(!m.length){alert('Open a WhatsApp status full screen and click again!');return;}m.forEach((u,idx)=>{const a=document.createElement('a');a.href=u;a.download='WhatsApp_Status_'+(idx+1)+(u.includes('video')||u.endsWith('.mp4')?'.mp4':'.jpg');document.body.appendChild(a);a.click();document.body.removeChild(a);});})();" class="bookmarklet-pill" id="bmLink" title="Drag to Bookmarks bar">
+                    <span>⚡ Senku Status Saver</span>
+                  </a>
+                </div>
+
+                <div class="bm-steps">
+                  <p>2. Open <a href="https://web.whatsapp.com" target="_blank" rel="noopener">web.whatsapp.com</a> and click on any contact's Status.</p>
+                  <p>3. Click the <strong>Senku Status Saver</strong> bookmark in your bookmarks bar.</p>
+                  <p>4. The full-quality image or video is saved directly into your Downloads folder! 🎉</p>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      <!-- Why Ad-Free Section -->
+      <section class="trust-banner">
+        <div class="trust-content">
+          <div class="trust-icon">🧪</div>
+          <div class="trust-text">
+            <h3>Why Senku Vault is 100% Ad-Free</h3>
+            <p>In the Kingdom of Science, there is no room for deceptive ads, fake virus alerts, or intrusive trackers. Senku Vault is engineered with clean, direct server-to-client streaming and zero third-party bloat.</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Download History Drawer / Modal -->
+    <aside class="history-drawer" id="historyDrawer">
+      <div class="history-backdrop" id="historyBackdrop"></div>
+      <div class="history-panel">
+        <div class="history-header">
+          <h3>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <span>Download History</span>
+          </h3>
+          <div class="history-actions">
+            <button class="clear-history-btn" id="clearHistoryBtn">Clear</button>
+            <button class="close-drawer-btn" id="closeHistoryBtn">&times;</button>
+          </div>
+        </div>
+        
+        <div class="history-list" id="historyList">
+          <div class="empty-history" id="emptyHistory">
+            <div class="empty-icon">🧪</div>
+            <p>No downloads recorded yet</p>
+            <span>Extracted media will show up here for fast access</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Floating Senku Engine HUD -->
+    <div class="antigravity-hud">
+      <div class="hud-item" id="engineToggle" title="Toggle Senku Engine Field">
+        <span class="hud-label">SENKU ENGINE</span>
+        <span class="hud-value" id="engineStatus">10B %</span>
+      </div>
+      <div class="hud-divider"></div>
+      <div class="hud-item" id="particleDensityToggle" title="Cycle Molecular Density">
+        <span class="hud-label">MOLECULES</span>
+        <span class="hud-value" id="particleCountText">100</span>
+      </div>
+      <div class="hud-divider"></div>
+      <div class="hud-item" id="soundToggle" title="Toggle Audio Feedback">
+        <span class="hud-label">AUDIO</span>
+        <span class="hud-value" id="soundStatus">ON</span>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="glass-footer">
+      <div class="footer-inner">
+        <p>© 2026 Senku Vault • Kingdom of Science. Powered by the Senku Engine. 10 Billion Percent Ad-Free.</p>
+        <div class="footer-tags">
+          <span class="footer-tag">Instagram Reels</span>
+          <span class="footer-tag">YouTube 4K & Shorts</span>
+          <span class="footer-tag">WhatsApp Status</span>
+          <span class="footer-tag">320kbps MP3</span>
+          <span class="footer-tag">100% Ad-Free</span>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/particles.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
