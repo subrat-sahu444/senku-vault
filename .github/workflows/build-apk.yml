@@ -23,9 +23,6 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
@@ -61,7 +58,7 @@ jobs:
             - 🛡️ **Zero Advertising**: Pure Kingdom of Science streaming.
             
             #### 📥 Download & Install
-            Click **`SenkuVault-v1.0.apk`** below to download directly to your Android device, then open it to install!
+            Click **`SenkuVault-v1.0.apk`** below to download directly to your Android device, then tap to install!
           files: build-output/SenkuVault-v1.0.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
