@@ -10,6 +10,15 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/subrat-sahu444/senku-vault/releases/download/v1.0.0-apk/SenkuVault-v1.0.apk">
+    <img src="https://img.shields.io/badge/Download-Android%20APK%20(v1.0)-00FF88?style=for-the-badge&logo=android&logoColor=black" alt="Download Android APK" />
+  </a>
+  <a href="https://subrat-sahu444.github.io/senku-vault/">
+    <img src="https://img.shields.io/badge/Live%20Web-Visit%20Website-00F0FF?style=for-the-badge&logo=googlechrome&logoColor=black" alt="Live Web App" />
+  </a>
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/Engine-Senku%20Engine%20v2.5-00ff88?style=for-the-badge" alt="Senku Engine" />
   <img src="https://img.shields.io/badge/Ads-0%25%20Zero%20Ads-00f0ff?style=for-the-badge" alt="Zero Ads" />
   <img src="https://img.shields.io/badge/Quality-10%20Billion%20%25%20Lossless-ffd700?style=for-the-badge" alt="Quality" />
