@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360">
+  <defs>
+    <linearGradient id="senkuBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#050d14" />
+      <stop offset="100%" stop-color="#0b1b1f" />
+    </linearGradient>
+    <linearGradient id="senkuGlow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00ff88" />
+      <stop offset="50%" stop-color="#00f0ff" />
+      <stop offset="100%" stop-color="#ffd700" />
+    </linearGradient>
+  </defs>
+  <rect width="640" height="360" fill="url(#senkuBg)" />
+  <!-- Atomic Ring -->
+  <ellipse cx="320" cy="180" rx="60" ry="24" fill="none" stroke="url(#senkuGlow)" stroke-width="2" opacity="0.4" transform="rotate(-30 320 180)" />
+  <ellipse cx="320" cy="180" rx="60" ry="24" fill="none" stroke="url(#senkuGlow)" stroke-width="2" opacity="0.4" transform="rotate(30 320 180)" />
+  <!-- Core Play Icon -->
+  <circle cx="320" cy="180" r="44" fill="none" stroke="url(#senkuGlow)" stroke-width="2.5" />
+  <polygon points="314,166 336,180 314,194" fill="url(#senkuGlow)" />
+  <text x="320" y="254" fill="#00ff88" font-family="'Space Grotesk', sans-serif" font-weight="bold" font-size="14" text-anchor="middle" letter-spacing="2">SENKU ENGINE • READY</text>
+  <text x="320" y="274" fill="#8b9bb4" font-family="sans-serif" font-size="12" text-anchor="middle" letter-spacing="1">10 BILLION PERCENT SCIENTIFIC EXTRACTION</text>
+</svg>
