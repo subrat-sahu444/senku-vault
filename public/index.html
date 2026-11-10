@@ -65,6 +65,9 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             <span>Install App</span>
           </button>
+          <button class="icon-btn" id="apiConfigBtn" title="Backend Cloud Engine Settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+          </button>
           <div class="status-badge" id="serverStatusBadge">
             <span class="status-dot pulse"></span>
             <span class="status-label">Senku Engine Online</span>
@@ -436,6 +439,35 @@
         </div>
       </div>
     </footer>
+
+    <!-- Cloud Engine Modal -->
+    <div class="glass-modal-backdrop hidden" id="configModal">
+      <div class="glass-modal">
+        <div class="modal-header">
+          <h3>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>
+            <span>Senku Cloud Engine Settings</span>
+          </h3>
+          <button class="close-modal-btn" id="closeConfigBtn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-desc">
+            Senku Vault uses <strong>yt-dlp & FFmpeg</strong> for lossless video streaming. When using GitHub Pages or the Android APK, connect your free Render cloud backend or keep it in Smart Client mode:
+          </p>
+          <div class="modal-input-group">
+            <label for="backendUrlInput">Custom Backend URL (Render / Railway / Local):</label>
+            <input type="url" id="backendUrlInput" class="glass-input modal-input" placeholder="e.g. https://senku-vault.onrender.com" />
+          </div>
+          <div class="modal-actions">
+            <button class="small-glow-btn" id="saveBackendBtn">Save & Connect</button>
+            <button class="clear-history-btn" id="resetBackendBtn">Reset to Default</button>
+          </div>
+          <div class="modal-tip">
+            💡 <strong>Free 1-Click Cloud:</strong> Go to <a href="https://render.com" target="_blank" rel="noopener">render.com</a> ➔ New Web Service ➔ Select your <code>subrat-sahu444/senku-vault</code> repo ➔ Copy your Render URL here!
+          </div>
+        </div>
+      </div>
+    </div>
 
   </div>
 

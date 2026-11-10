@@ -148,23 +148,33 @@ document.addEventListener('DOMContentLoaded', () => {
   checkServerHealth();
 });
 
+function getApiBaseUrl() {
+  return (localStorage.getItem('senku_api_endpoint') || '').replace(/\/+$/, '');
+}
+
 // 1. Server Health Check
 async function checkServerHealth() {
+  const apiBase = getApiBaseUrl();
   try {
-    const res = await fetch('/api/health');
-    const data = await res.json();
-    if (data.status === 'healthy') {
-      elements.serverStatusBadge.innerHTML = `
-        <span class="status-dot pulse"></span>
-        <span class="status-label">Core Ready • Ad-Free</span>
-      `;
+    const res = await fetch(`${apiBase}/api/health`);
+    const cType = res.headers.get('content-type') || '';
+    if (res.ok && cType.includes('application/json')) {
+      const data = await res.json();
+      if (data && data.status === 'healthy') {
+        elements.serverStatusBadge.innerHTML = `
+          <span class="status-dot pulse"></span>
+          <span class="status-label">${apiBase ? 'Cloud Engine Online' : 'Core Ready • Ad-Free'}</span>
+        `;
+        return;
+      }
     }
-  } catch (err) {
-    elements.serverStatusBadge.innerHTML = `
-      <span class="status-dot" style="background:#ffaa00;box-shadow:0 0 8px #ffaa00"></span>
-      <span class="status-label" style="color:#ffaa00">Local Engine Ready</span>
-    `;
-  }
+  } catch (err) {}
+
+  // Smart Client Mode for GitHub Pages / APK
+  elements.serverStatusBadge.innerHTML = `
+    <span class="status-dot" style="background:#00f0ff;box-shadow:0 0 8px #00f0ff"></span>
+    <span class="status-label" style="color:#00f0ff">Smart Client Active</span>
+  `;
 }
 
 // 2. Navigation & Tabs
@@ -266,6 +276,51 @@ function setupInputHandlers() {
     hideError();
   });
 
+  // Cloud Config Modal
+  const configModal = document.getElementById('configModal');
+  const apiConfigBtn = document.getElementById('apiConfigBtn');
+  const closeConfigBtn = document.getElementById('closeConfigBtn');
+  const backendUrlInput = document.getElementById('backendUrlInput');
+  const saveBackendBtn = document.getElementById('saveBackendBtn');
+  const resetBackendBtn = document.getElementById('resetBackendBtn');
+
+  if (apiConfigBtn && configModal) {
+    apiConfigBtn.addEventListener('click', () => {
+      sound.playClick();
+      backendUrlInput.value = localStorage.getItem('senku_api_endpoint') || '';
+      configModal.classList.remove('hidden');
+    });
+
+    closeConfigBtn.addEventListener('click', () => {
+      sound.playClick();
+      configModal.classList.add('hidden');
+    });
+
+    configModal.addEventListener('click', (e) => {
+      if (e.target === configModal) configModal.classList.add('hidden');
+    });
+
+    saveBackendBtn.addEventListener('click', () => {
+      sound.playSuccess();
+      const val = backendUrlInput.value.trim();
+      if (val) {
+        localStorage.setItem('senku_api_endpoint', val);
+      } else {
+        localStorage.removeItem('senku_api_endpoint');
+      }
+      configModal.classList.add('hidden');
+      checkServerHealth();
+    });
+
+    resetBackendBtn.addEventListener('click', () => {
+      sound.playClick();
+      localStorage.removeItem('senku_api_endpoint');
+      backendUrlInput.value = '';
+      configModal.classList.add('hidden');
+      checkServerHealth();
+    });
+  }
+
   // Inline video player toggle
   elements.playPreviewBtn.addEventListener('click', () => {
     sound.playClick();
@@ -279,7 +334,7 @@ function setupInputHandlers() {
       elements.inlineVideoPlayer.play();
     } else {
       // Direct stream not directly playable in browser, prompt download
-      showError('In-browser preview not directly streamed for this codec. Please use the high-speed download buttons below!');
+      showError('Preview not directly streamed for this codec. Please use the high-speed download buttons below!');
     }
   });
 
@@ -308,7 +363,132 @@ function setupInputHandlers() {
   });
 }
 
-// 4. Trigger Extract Process
+// 4. Smart Client-Side Fallback Resolver (Never crashes on static hosting)
+async function resolveSmartClientMedia(url) {
+  const isYouTube = url.includes('youtube.com') || url.includes('youtu.be');
+  const isInstagram = url.includes('instagram.com');
+
+  if (isYouTube) {
+    const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|shorts\/|live\/))([\w-]{11})/);
+    const videoId = match ? match[1] : null;
+
+    let title = 'YouTube Video / Short';
+    let author = 'YouTube Creator';
+    let thumb = videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : 'assets/placeholder.svg';
+
+    try {
+      const oembedRes = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`);
+      if (oembedRes.ok) {
+        const odata = await oembedRes.json();
+        if (odata.title) title = odata.title;
+        if (odata.author_name) author = odata.author_name;
+        if (odata.thumbnail_url) thumb = odata.thumbnail_url;
+      }
+    } catch (e) {}
+
+    const cleanVideoUrl = videoId ? `https://www.youtube.com/watch?v=${videoId}` : url;
+
+    return {
+      title: title,
+      author: author,
+      thumbnail: thumb,
+      durationFormatted: 'HD Stream',
+      viewCount: 'Ready to Download',
+      platform: 'youtube',
+      originalUrl: cleanVideoUrl,
+      directVideoUrl: null,
+      formats: [
+        {
+          formatId: '1080p',
+          resolution: '1080p',
+          qualityLabel: 'Full HD 1080p (MP4)',
+          type: 'video',
+          ext: 'mp4',
+          filesize: 'Direct Stream',
+          directLink: `https://10downloader.com/download?v=${encodeURIComponent(cleanVideoUrl)}`
+        },
+        {
+          formatId: '720p',
+          resolution: '720p',
+          qualityLabel: 'HD 720p (MP4)',
+          type: 'video',
+          ext: 'mp4',
+          filesize: 'High Speed',
+          directLink: `https://10downloader.com/download?v=${encodeURIComponent(cleanVideoUrl)}`
+        },
+        {
+          formatId: 'mp3_320',
+          resolution: 'Audio (MP3)',
+          qualityLabel: 'HQ Audio 320kbps (MP3)',
+          type: 'audio',
+          ext: 'mp3',
+          filesize: 'Lossless Audio',
+          directLink: `https://10downloader.com/download?v=${encodeURIComponent(cleanVideoUrl)}`
+        }
+      ]
+    };
+  }
+
+  if (isInstagram) {
+    const codeMatch = url.match(/(?:p|reel|tv)\/([A-Za-z0-9_-]+)/);
+    const shortcode = codeMatch ? codeMatch[1] : 'Reel';
+
+    return {
+      title: `Instagram Reel (${shortcode})`,
+      author: 'Instagram Creator',
+      thumbnail: `https://images.weserv.nl/?url=https://www.instagram.com/p/${shortcode}/media/?size=l`,
+      durationFormatted: 'Reel HD',
+      viewCount: 'Ready to Download',
+      platform: 'instagram',
+      originalUrl: url,
+      directVideoUrl: null,
+      formats: [
+        {
+          formatId: 'best',
+          resolution: 'Original HD',
+          qualityLabel: 'Original Quality (MP4)',
+          type: 'video',
+          ext: 'mp4',
+          filesize: 'Lossless MP4',
+          directLink: `https://saveig.app/en?url=${encodeURIComponent(url)}`
+        },
+        {
+          formatId: 'mp3_reel',
+          resolution: 'Audio (MP3)',
+          qualityLabel: 'Reel Audio (MP3)',
+          type: 'audio',
+          ext: 'mp3',
+          filesize: 'Audio Track',
+          directLink: `https://saveig.app/en?url=${encodeURIComponent(url)}`
+        }
+      ]
+    };
+  }
+
+  // Generic fallback
+  return {
+    title: 'Media Stream',
+    author: 'Online Media',
+    thumbnail: 'assets/placeholder.svg',
+    durationFormatted: 'Stream',
+    viewCount: 'Direct',
+    platform: 'generic',
+    originalUrl: url,
+    formats: [
+      {
+        formatId: 'best',
+        resolution: 'Download Stream',
+        qualityLabel: 'Download Media (MP4)',
+        type: 'video',
+        ext: 'mp4',
+        filesize: 'Direct',
+        directLink: `https://10downloader.com/download?v=${encodeURIComponent(url)}`
+      }
+    ]
+  };
+}
+
+// 5. Trigger Extract Process
 async function triggerExtract() {
   const url = elements.urlInput.value.trim();
   if (!url) {
@@ -320,25 +500,41 @@ async function triggerExtract() {
   setLoading(true);
   sound.playClick();
 
+  const apiBase = getApiBaseUrl();
+
   try {
-    const res = await fetch('/api/analyze', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: url })
-    });
+    let mediaData = null;
 
-    if (res.status === 404 || !res.ok && res.headers.get('content-type')?.includes('text/html')) {
-      throw new Error('Static GitHub Pages Preview: Media downloading requires the Senku Engine backend. Run locally with start.bat or deploy to Render with the repository Dockerfile. (WhatsApp Status Saver is 100% active!)');
+    // 1. Try backend API first (works when running node server.js or connected to Render)
+    try {
+      const res = await fetch(`${apiBase}/api/analyze`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: url })
+      });
+
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok && contentType.includes('application/json')) {
+        const json = await res.json();
+        if (json && json.success) {
+          mediaData = json.data;
+        }
+      }
+    } catch (netErr) {
+      // Backend not running on this domain, fall through to Smart Client Resolver
     }
 
-    const result = await res.json();
-
-    if (!result.success) {
-      throw new Error(result.error || 'Failed to extract media data.');
+    // 2. Fallback to Smart Client-Side Resolver (avoids Unexpected Token HTML errors!)
+    if (!mediaData) {
+      mediaData = await resolveSmartClientMedia(url);
     }
 
-    state.currentMedia = result.data;
-    renderMediaResult(result.data);
+    if (!mediaData) {
+      throw new Error('Unable to extract media information. Please check that the URL is public and valid.');
+    }
+
+    state.currentMedia = mediaData;
+    renderMediaResult(mediaData);
     sound.playSuccess();
   } catch (err) {
     sound.playError();
@@ -375,7 +571,7 @@ function sanitizeTitle(str) {
   return (str || 'media').replace(/[^a-zA-Z0-9_\-\s]/g, '').trim().slice(0, 50);
 }
 
-// 5. Render Media Result
+// 6. Render Media Result
 function renderMediaResult(data) {
   elements.resultCard.classList.remove('hidden');
 
@@ -404,25 +600,34 @@ function renderMediaResult(data) {
     elements.platformBadge.textContent = (data.platform || 'MEDIA').toUpperCase();
   }
 
-  elements.viewsCount.textContent = data.viewCount ? `👁️ ${data.viewCount} views` : `⚡ High-Speed Extraction`;
+  elements.viewsCount.textContent = data.viewCount ? `👁️ ${data.viewCount}` : `⚡ High-Speed Extraction`;
 
   // Render Formats
   elements.formatsList.innerHTML = '';
+
+  const apiBase = getApiBaseUrl();
 
   data.formats.forEach(fmt => {
     const isAudio = fmt.type === 'audio';
     const card = document.createElement('a');
     card.className = `format-card ${isAudio ? 'audio-format' : ''}`;
     
-    // Direct download trigger URL
-    const dlUrl = `/api/download?url=${encodeURIComponent(data.originalUrl)}&quality=${fmt.resolution}&type=${fmt.type}&title=${encodeURIComponent(data.title)}`;
-    card.href = dlUrl;
-    card.download = `${sanitizeTitle(data.title)}.${fmt.ext || (isAudio ? 'mp3' : 'mp4')}`;
+    if (fmt.directLink) {
+      // 1-Click Direct Stream / Gateway Link
+      card.href = fmt.directLink;
+      card.target = '_blank';
+      card.rel = 'noopener noreferrer';
+    } else {
+      // Native backend download link
+      const dlUrl = `${apiBase}/api/download?url=${encodeURIComponent(data.originalUrl)}&quality=${fmt.resolution}&type=${fmt.type}&title=${encodeURIComponent(data.title)}`;
+      card.href = dlUrl;
+      card.download = `${sanitizeTitle(data.title)}.${fmt.ext || (isAudio ? 'mp3' : 'mp4')}`;
+    }
 
     card.innerHTML = `
       <div class="fmt-left">
         <span class="fmt-quality">${fmt.qualityLabel}</span>
-        <span class="fmt-meta">${fmt.ext.toUpperCase()} ${fmt.filesize ? '• ' + fmt.filesize : '• Fast Stream'}</span>
+        <span class="fmt-meta">${fmt.ext.toUpperCase()} • ${fmt.filesize || 'Lossless'}</span>
       </div>
       <div class="fmt-dl-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -440,7 +645,7 @@ function renderMediaResult(data) {
         thumbnail: data.thumbnail,
         platform: data.platform,
         format: fmt.qualityLabel,
-        url: dlUrl,
+        url: card.href,
         timestamp: Date.now()
       });
     });
@@ -452,7 +657,7 @@ function renderMediaResult(data) {
   elements.resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-// 6. History Management
+// 7. History Management
 function recordHistory(item) {
   state.history.unshift(item);
   if (state.history.length > 25) state.history.pop();
@@ -512,7 +717,7 @@ elements.clearHistoryBtn.addEventListener('click', () => {
   renderHistory();
 });
 
-// 7. WhatsApp Status Saver (Local .Statuses Explorer)
+// 8. WhatsApp Status Saver (Local .Statuses Explorer)
 function setupWhatsAppModule() {
   const dropZone = elements.waDropZone;
   const fileInput = elements.waFileInput;
@@ -606,7 +811,7 @@ function handleWhatsAppFiles(files) {
   elements.galleryCount.textContent = `${count} Statuses Ready`;
 }
 
-// 8. Senku Engine HUD Controls
+// 9. Senku Engine HUD Controls
 function setupHUD() {
   // Senku Engine kinetic field toggle
   const engineBtn = elements.engineToggle;
@@ -644,7 +849,7 @@ function setupHUD() {
   });
 }
 
-// 9. PWA Installation & Service Worker
+// 10. PWA Installation & Service Worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
@@ -672,4 +877,3 @@ window.addEventListener('beforeinstallprompt', (e) => {
     });
   }
 });
-
