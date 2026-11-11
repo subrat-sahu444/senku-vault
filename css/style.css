@@ -1089,6 +1089,249 @@ body.senku-body, body.antigravity-body {
   box-shadow: 0 0 15px rgba(0, 240, 255, 0.25);
 }
 
+/* Snaptube Mobile Technology Integration */
+.snaptube-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 215, 0, 0.12);
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  color: #ffd700;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.2);
+  letter-spacing: 0.3px;
+}
+
+.snaptube-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ffd700;
+  box-shadow: 0 0 8px #ffd700;
+  animation: pulseGold 2s infinite ease-in-out;
+}
+
+@keyframes pulseGold {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.snaptube-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(0, 255, 136, 0.2));
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  color: #ffd700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-left: 8px;
+}
+
+.snaptube-filter-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0 16px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.snaptube-tab {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-glass);
+  color: var(--text-muted);
+  border-radius: var(--radius-full);
+  padding: 6px 14px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.snaptube-tab:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.snaptube-tab.active {
+  background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 240, 255, 0.2));
+  border-color: var(--neon-green);
+  color: var(--neon-green);
+  box-shadow: 0 0 12px rgba(0, 255, 136, 0.25);
+  font-weight: 600;
+}
+
+/* Snaptube Sheet Modal for Mobile */
+.snaptube-sheet {
+  background: rgba(11, 15, 25, 0.98);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid rgba(255, 215, 0, 0.35);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  width: 100%;
+  max-width: 540px;
+  margin-top: auto;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(255, 215, 0, 0.15);
+  overflow: hidden;
+  animation: slideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes slideUpModal {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.snaptube-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-glass);
+}
+
+.snaptube-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.snaptube-icon {
+  font-size: 1.4rem;
+  background: rgba(255, 215, 0, 0.15);
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.snaptube-logo h4 {
+  font-size: 0.95rem;
+  color: #fff;
+  margin: 0;
+  font-weight: 700;
+}
+
+.snaptube-logo p {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin: 2px 0 0;
+}
+
+.snaptube-sheet-body {
+  padding: 16px 20px 24px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.snaptube-media-summary {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 10px;
+  border-radius: var(--radius-md);
+  margin-bottom: 16px;
+  border: 1px solid var(--border-glass);
+}
+
+.snaptube-media-summary img {
+  width: 60px;
+  height: 45px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.snaptube-media-meta {
+  overflow: hidden;
+}
+
+.snaptube-title {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.snaptube-author {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.snaptube-sec-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #ffd700;
+  letter-spacing: 0.5px;
+  margin: 14px 0 8px;
+}
+
+.snaptube-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.snaptube-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.snaptube-btn:hover, .snaptube-btn:active {
+  background: rgba(255, 215, 0, 0.12);
+  border-color: rgba(255, 215, 0, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
+}
+
+.snaptube-btn-label, .snaptube-btn-main {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.snaptube-btn-sub {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.snaptube-status-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 255, 136, 0.08);
+  border: 1px solid rgba(0, 255, 136, 0.25);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  margin-top: 16px;
+  font-size: 0.76rem;
+  color: var(--neon-green);
+}
+
 /* Platform Features Grid */
 .features-grid {
   display: grid;

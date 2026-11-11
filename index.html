@@ -61,6 +61,10 @@
         </nav>
 
         <div class="header-actions">
+          <div class="snaptube-pill" id="snaptubePill" title="Snaptube Mobile Technology Active">
+            <span class="snaptube-dot"></span>
+            <span>⚡ Snaptube Engine</span>
+          </div>
           <a href="https://github.com/subrat-sahu444/senku-vault/releases/download/v1.0.0-apk/SenkuVault-v1.0.apk" class="install-pwa-btn" id="downloadApkBtn" title="Download Android APK" download>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             <span>📱 Download APK</span>
@@ -192,8 +196,18 @@
 
                 <div class="formats-section">
                   <div class="formats-header">
-                    <span class="section-title">Available Formats</span>
-                    <span class="section-hint">Select a stream to download instantly:</span>
+                    <div>
+                      <span class="section-title">⚡ Snaptube Direct Downloads</span>
+                      <span class="snaptube-badge">Mobile Ready</span>
+                    </div>
+                    <span class="section-hint">Select Music (MP3) or Video (MP4) to save directly to your device:</span>
+                  </div>
+
+                  <!-- Snaptube Category Filter -->
+                  <div class="snaptube-filter-tabs">
+                    <button class="snaptube-tab active" data-filter="all">All Formats</button>
+                    <button class="snaptube-tab" data-filter="audio">🎵 Music (MP3)</button>
+                    <button class="snaptube-tab" data-filter="video">🎬 Video (MP4)</button>
                   </div>
 
                   <div class="formats-list" id="formatsList">
@@ -500,6 +514,58 @@
         </div>
       </div>
     </div>
+
+    <!-- Snaptube Mobile Download Sheet -->
+    <div class="glass-modal-backdrop hidden" id="snaptubeModal">
+      <div class="snaptube-sheet">
+        <div class="snaptube-sheet-header">
+          <div class="snaptube-logo">
+            <span class="snaptube-icon">⚡</span>
+            <div>
+              <h4>Snaptube Mobile Engine</h4>
+              <p>1-Tap Direct Device Downloads • 100% Ad-Free</p>
+            </div>
+          </div>
+          <button class="close-modal-btn" id="closeSnaptubeBtn">&times;</button>
+        </div>
+
+        <div class="snaptube-sheet-body">
+          <div class="snaptube-media-summary">
+            <img id="snaptubeThumb" src="" alt="Thumbnail" />
+            <div class="snaptube-media-meta">
+              <span id="snaptubeTitle" class="snaptube-title">Media Title</span>
+              <span id="snaptubeAuthor" class="snaptube-author">Creator</span>
+            </div>
+          </div>
+
+          <!-- Music Section -->
+          <div class="snaptube-section">
+            <div class="snaptube-sec-title">
+              <span>🎵</span>
+              <span>MUSIC (AUDIO)</span>
+            </div>
+            <div class="snaptube-grid" id="snaptubeMusicGrid"></div>
+          </div>
+
+          <!-- Video Section -->
+          <div class="snaptube-section">
+            <div class="snaptube-sec-title">
+              <span>🎬</span>
+              <span>VIDEO (MP4)</span>
+            </div>
+            <div class="snaptube-grid" id="snaptubeVideoGrid"></div>
+          </div>
+
+          <div class="snaptube-status-box" id="snaptubeStatusBox">
+            <span class="snaptube-dot"></span>
+            <span id="snaptubeStatusMsg">Tap any format above to download directly to your phone.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Silent Snaptube Mobile Stream Tunnel -->
+    <iframe id="snaptubeTunnel" style="display:none;width:0;height:0;border:0;" sandbox="allow-scripts allow-downloads allow-same-origin allow-forms"></iframe>
 
   </div>
 
