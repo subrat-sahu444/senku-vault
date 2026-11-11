@@ -1,4 +1,4 @@
-const CACHE_NAME = 'senku-vault-snaptube-v2';
+const CACHE_NAME = 'senku-vault-snaptube-io-v3';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

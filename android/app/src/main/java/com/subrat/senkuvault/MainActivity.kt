@@ -85,7 +85,7 @@ class MainActivity : AppCompatActivity() {
             useWideViewPort = true
             loadWithOverviewMode = true
             cacheMode = WebSettings.LOAD_DEFAULT
-            userAgentString = "${userAgentString.replace("; wv", "")} SenkuVaultApp/1.0 SnaptubeEngine/2.0"
+            userAgentString = "${userAgentString.replace("; wv", "")} SenkuVaultApp/1.0 Snaptube.io/Official"
         }
 
         // Bridge native Android downloader to web app
@@ -121,6 +121,16 @@ class MainActivity : AppCompatActivity() {
                         Toast.makeText(this@MainActivity, "WhatsApp not installed", Toast.LENGTH_SHORT).show()
                         return true
                     }
+                }
+                // Handle Snaptube APK or direct APK downloads
+                if (url.endsWith(".apk") || url.contains(".apk?") || url.contains("webapk/snaptube")) {
+                    val apkName = if (url.contains("Click_me_to_install_SnapTube")) {
+                        "Click_me_to_install_SnapTube.apk"
+                    } else {
+                        "Snaptube_Official.apk"
+                    }
+                    downloadWithManager(url, apkName, "application/vnd.android.package-archive")
+                    return true
                 }
                 return false
             }
@@ -194,14 +204,14 @@ class MainActivity : AppCompatActivity() {
                 val request = DownloadManager.Request(Uri.parse(url)).apply {
                     setMimeType(effectiveMime)
                     addRequestHeader("User-Agent", webView.settings.userAgentString)
-                    setDescription("Downloading with Snaptube Mobile Engine...")
+                    setDescription("Downloading via Snaptube (snaptube.io)...")
                     setTitle(filename)
                     setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                     setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, filename)
                 }
                 val dm = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
                 dm.enqueue(request)
-                Toast.makeText(this, "⚡ Snaptube: Download started! Check notifications.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "⚡ Snaptube (snaptube.io): Download started! Check notifications.", Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {
                 try {
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
@@ -245,6 +255,13 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun isNativeApp(): Boolean {
             return true
+        }
+
+        @JavascriptInterface
+        fun openSnaptube() {
+            runOnUiThread {
+                webView.loadUrl("https://www.snaptube.io/")
+            }
         }
     }
 }

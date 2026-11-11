@@ -237,6 +237,8 @@ function setupNavigation() {
       elements.urlInput.placeholder = 'Paste Instagram Reel or Post URL (e.g., https://instagram.com/reel/...)...';
     } else if (tabName === 'youtube') {
       elements.urlInput.placeholder = 'Paste YouTube video or Shorts link (e.g., https://youtu.be/...)...';
+    } else if (tabName === 'snaptube') {
+      elements.urlInput.placeholder = 'Paste any YouTube, Instagram, or media link for Snaptube (snaptube.io) extraction...';
     } else if (tabName === 'whatsapp') {
       elements.urlInput.placeholder = 'WhatsApp Status Vault active — See local extractor & bookmarklet below!';
     } else {
@@ -467,11 +469,11 @@ function setupInputHandlers() {
   // Snaptube Pill & Modal Listeners
   if (elements.snaptubePill) {
     elements.snaptubePill.addEventListener('click', () => {
+      sound.playClick();
+      const snaptubeNavTab = document.querySelector('.nav-tab[data-tab="snaptube"]');
+      if (snaptubeNavTab) snaptubeNavTab.click();
       if (state.currentMedia) {
         openSnaptubeSheet(state.currentMedia);
-      } else {
-        elements.urlInput.focus();
-        showError('Paste a YouTube or Instagram link and tap Extract to open Snaptube direct downloader!');
       }
     });
   }
@@ -1060,7 +1062,7 @@ async function executeSnaptubeMobileDownload(data, fmt, cardOrBtn, origText) {
   const statusEl = cardOrBtn ? (cardOrBtn.querySelector('.fmt-meta') || cardOrBtn) : null;
   if (statusEl) statusEl.textContent = '⚡ Extracting stream...';
   if (elements.snaptubeStatusMsg) {
-    elements.snaptubeStatusMsg.textContent = `⚡ Snaptube Engine: Fetching ${fmt.qualityLabel || fmt.resolution}...`;
+    elements.snaptubeStatusMsg.textContent = `⚡ Snaptube (snaptube.io): Fetching ${fmt.qualityLabel || fmt.resolution}...`;
   }
 
   // 1. Resolve stream URL
