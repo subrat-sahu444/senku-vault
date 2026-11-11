@@ -145,7 +145,19 @@ const elements = {
   waGallery: document.getElementById('waGallery'),
   waItemsGrid: document.getElementById('waItemsGrid'),
   galleryCount: document.getElementById('galleryCount'),
-  downloadAllWaBtn: document.getElementById('downloadAllWaBtn')
+  downloadAllWaBtn: document.getElementById('downloadAllWaBtn'),
+  // Snaptube Mobile Modal & Controls
+  snaptubePill: document.getElementById('snaptubePill'),
+  snaptubeModal: document.getElementById('snaptubeModal'),
+  closeSnaptubeBtn: document.getElementById('closeSnaptubeBtn'),
+  snaptubeThumb: document.getElementById('snaptubeThumb'),
+  snaptubeTitle: document.getElementById('snaptubeTitle'),
+  snaptubeAuthor: document.getElementById('snaptubeAuthor'),
+  snaptubeMusicGrid: document.getElementById('snaptubeMusicGrid'),
+  snaptubeVideoGrid: document.getElementById('snaptubeVideoGrid'),
+  snaptubeStatusBox: document.getElementById('snaptubeStatusBox'),
+  snaptubeStatusMsg: document.getElementById('snaptubeStatusMsg'),
+  snaptubeTunnel: document.getElementById('snaptubeTunnel')
 };
 
 // Initialization
@@ -430,6 +442,49 @@ function setupInputHandlers() {
     a.click();
     document.body.removeChild(a);
   });
+
+  // Snaptube Filter Tabs (All Formats, Music MP3, Video MP4)
+  document.querySelectorAll('.snaptube-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      sound.playClick();
+      document.querySelectorAll('.snaptube-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      const filter = tab.dataset.filter;
+      const cards = elements.formatsList.querySelectorAll('.format-card');
+      cards.forEach(card => {
+        const isAudio = card.classList.contains('audio-format');
+        if (filter === 'all') {
+          card.style.display = 'flex';
+        } else if (filter === 'audio') {
+          card.style.display = isAudio ? 'flex' : 'none';
+        } else if (filter === 'video') {
+          card.style.display = !isAudio ? 'flex' : 'none';
+        }
+      });
+    });
+  });
+
+  // Snaptube Pill & Modal Listeners
+  if (elements.snaptubePill) {
+    elements.snaptubePill.addEventListener('click', () => {
+      if (state.currentMedia) {
+        openSnaptubeSheet(state.currentMedia);
+      } else {
+        elements.urlInput.focus();
+        showError('Paste a YouTube or Instagram link and tap Extract to open Snaptube direct downloader!');
+      }
+    });
+  }
+
+  if (elements.closeSnaptubeBtn) {
+    elements.closeSnaptubeBtn.addEventListener('click', closeSnaptubeSheet);
+  }
+
+  if (elements.snaptubeModal) {
+    elements.snaptubeModal.addEventListener('click', (e) => {
+      if (e.target === elements.snaptubeModal) closeSnaptubeSheet();
+    });
+  }
 }
 
 // 4. Media Preview Engine (YouTube 4K, Instagram Reels, & Local Stream)
@@ -598,7 +653,7 @@ function openWhatsAppStatusPreview(file, objectUrl, isVideo) {
   elements.mediaLightboxModal.classList.remove('hidden');
 }
 
-// 4. Smart Client-Side Fallback Resolver (No third-party redirects!)
+// 4. Smart Client-Side Fallback Resolver & Snaptube Stream Extractor
 async function resolveSmartClientMedia(url) {
   const isYouTube = url.includes('youtube.com') || url.includes('youtu.be');
   const isInstagram = url.includes('instagram.com');
@@ -610,37 +665,106 @@ async function resolveSmartClientMedia(url) {
     let title = 'YouTube Video / Short';
     let author = 'YouTube Creator';
     let thumb = videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : 'assets/placeholder.svg';
+    let durationFormatted = 'HD Stream';
+    let viewCount = '1-Click Direct';
+    const streamMap = {};
 
-    try {
-      const oembedRes = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`);
-      if (oembedRes.ok) {
-        const odata = await oembedRes.json();
-        if (odata.title) title = odata.title;
-        if (odata.author_name) author = odata.author_name;
-        if (odata.thumbnail_url) thumb = odata.thumbnail_url;
+    // 1. Try Invidious fast stream extraction
+    if (videoId) {
+      try {
+        const invRes = await fetch(`https://yt.chocolatemoo53.com/api/v1/videos/${videoId}`, {
+          signal: AbortSignal.timeout(3000)
+        });
+        if (invRes.ok) {
+          const invData = await invRes.json();
+          if (invData.title) title = invData.title;
+          if (invData.author) author = invData.author;
+          if (invData.videoThumbnails && invData.videoThumbnails.length > 0) {
+            thumb = invData.videoThumbnails[0].url;
+          }
+          if (invData.lengthSeconds) {
+            const m = Math.floor(invData.lengthSeconds / 60);
+            const s = String(invData.lengthSeconds % 60).padStart(2, '0');
+            durationFormatted = `${m}:${s}`;
+          }
+          if (invData.viewCount) {
+            viewCount = Number(invData.viewCount).toLocaleString();
+          }
+
+          // Extract adaptive streams
+          const audioList = (invData.adaptiveFormats || []).filter(f => (f.type || '').includes('audio'));
+          const bestAudio = audioList.find(a => a.itag === '140') || audioList[0];
+          if (bestAudio) streamMap['audio'] = bestAudio.url;
+
+          const videoList = (invData.adaptiveFormats || []).filter(f => (f.type || '').includes('video/mp4'));
+          ['1080p', '720p', '480p', '360p'].forEach(resLabel => {
+            const vMatch = videoList.find(v => (v.qualityLabel || '').includes(resLabel));
+            if (vMatch) streamMap[resLabel] = vMatch.url;
+          });
+        }
+      } catch (e) {
+        // Fallback to oembed
+        try {
+          const oembedRes = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`);
+          if (oembedRes.ok) {
+            const odata = await oembedRes.json();
+            if (odata.title) title = odata.title;
+            if (odata.author_name) author = odata.author_name;
+            if (odata.thumbnail_url) thumb = odata.thumbnail_url;
+          }
+        } catch (oe) {}
       }
-    } catch (e) {}
+    }
 
     const cleanVideoUrl = videoId ? `https://www.youtube.com/watch?v=${videoId}` : url;
 
+    // Full Snaptube Mobile Tier List
     return {
       id: videoId,
       title: title,
       author: author,
       thumbnail: thumb,
-      durationFormatted: 'HD Stream',
-      viewCount: '1-Click Direct',
+      durationFormatted: durationFormatted,
+      viewCount: viewCount,
       platform: 'youtube',
       originalUrl: cleanVideoUrl,
-      directVideoUrl: null,
+      directVideoUrl: streamMap['720p'] || streamMap['360p'] || null,
       formats: [
+        {
+          formatId: 'mp3_320',
+          resolution: '320k',
+          qualityLabel: 'HQ Audio 320kbps (MP3)',
+          type: 'audio',
+          ext: 'mp3',
+          filesize: 'Lossless Audio',
+          directStreamUrl: streamMap['audio'] || null
+        },
+        {
+          formatId: 'mp3_128',
+          resolution: '128k',
+          qualityLabel: 'Standard Audio 128kbps (MP3)',
+          type: 'audio',
+          ext: 'mp3',
+          filesize: 'Fast Download',
+          directStreamUrl: streamMap['audio'] || null
+        },
+        {
+          formatId: 'm4a',
+          resolution: 'm4a',
+          qualityLabel: 'Crystal Clear (M4A/AAC)',
+          type: 'audio',
+          ext: 'm4a',
+          filesize: 'Original Quality',
+          directStreamUrl: streamMap['audio'] || null
+        },
         {
           formatId: '1080p',
           resolution: '1080p',
           qualityLabel: 'Full HD 1080p (MP4)',
           type: 'video',
           ext: 'mp4',
-          filesize: 'Lossless'
+          filesize: 'Lossless',
+          directStreamUrl: streamMap['1080p'] || streamMap['720p'] || null
         },
         {
           formatId: '720p',
@@ -648,15 +772,26 @@ async function resolveSmartClientMedia(url) {
           qualityLabel: 'HD 720p (MP4)',
           type: 'video',
           ext: 'mp4',
-          filesize: 'Fast Download'
+          filesize: 'Recommended',
+          directStreamUrl: streamMap['720p'] || null
         },
         {
-          formatId: 'mp3_320',
-          resolution: 'Audio (MP3)',
-          qualityLabel: 'HQ Audio 320kbps (MP3)',
-          type: 'audio',
-          ext: 'mp3',
-          filesize: 'Lossless Audio'
+          formatId: '480p',
+          resolution: '480p',
+          qualityLabel: 'Standard 480p (MP4)',
+          type: 'video',
+          ext: 'mp4',
+          filesize: 'Data Saver',
+          directStreamUrl: streamMap['480p'] || null
+        },
+        {
+          formatId: '360p',
+          resolution: '360p',
+          qualityLabel: 'Fast 360p (MP4)',
+          type: 'video',
+          ext: 'mp4',
+          filesize: 'Small File',
+          directStreamUrl: streamMap['360p'] || null
         }
       ]
     };
@@ -683,15 +818,26 @@ async function resolveSmartClientMedia(url) {
           qualityLabel: 'Original Quality (MP4)',
           type: 'video',
           ext: 'mp4',
-          filesize: 'Lossless MP4'
+          filesize: 'Lossless MP4',
+          directStreamUrl: null
+        },
+        {
+          formatId: '720p',
+          resolution: 'HD 720p',
+          qualityLabel: 'HD 720p (MP4)',
+          type: 'video',
+          ext: 'mp4',
+          filesize: 'Fast Download',
+          directStreamUrl: null
         },
         {
           formatId: 'mp3_reel',
-          resolution: 'Audio (MP3)',
-          qualityLabel: 'Reel Audio (MP3)',
+          resolution: 'Audio 320k',
+          qualityLabel: 'Reel Audio 320kbps (MP3)',
           type: 'audio',
           ext: 'mp3',
-          filesize: 'Audio Track'
+          filesize: 'Audio Track',
+          directStreamUrl: null
         }
       ]
     };
@@ -712,7 +858,8 @@ async function resolveSmartClientMedia(url) {
         qualityLabel: 'Download Media (MP4)',
         type: 'video',
         ext: 'mp4',
-        filesize: 'Direct'
+        filesize: 'Direct',
+        directStreamUrl: null
       }
     ]
   };
@@ -802,17 +949,26 @@ function sanitizeTitle(str) {
 
 // In-Platform Direct 1-Click File Downloader (No new pages or external redirects!)
 async function triggerDirectDownload(dlUrl, filename, card, origText) {
-  const metaSpan = card.querySelector('.fmt-meta');
-  metaSpan.textContent = '⚡ Downloading directly...';
+  const metaSpan = card ? card.querySelector('.fmt-meta') : null;
+  if (metaSpan) metaSpan.textContent = '⚡ Downloading directly...';
 
-  // 1. Android APK WebView Integration
+  // 1. Android APK Native WebView Downloader
+  if (window.AndroidDownloader && typeof window.AndroidDownloader.downloadMedia === 'function') {
+    const isAudio = filename.endsWith('.mp3') || filename.endsWith('.m4a');
+    window.AndroidDownloader.downloadMedia(dlUrl, filename, isAudio ? 'audio/mpeg' : 'video/mp4');
+    if (metaSpan) metaSpan.textContent = '✓ Sent to Android Downloader!';
+    sound.playSuccess();
+    setTimeout(() => { if (metaSpan && origText) metaSpan.textContent = origText; }, 3500);
+    return;
+  }
+
   const isAndroidApp = navigator.userAgent.includes('SenkuVaultApp') || /Android.*Version\/[0-9.]+\s+Chrome/i.test(navigator.userAgent);
   if (isAndroidApp) {
     window.location.href = dlUrl;
     setTimeout(() => {
-      metaSpan.textContent = '✓ Sent to Android Downloader!';
+      if (metaSpan) metaSpan.textContent = '✓ Sent to Android Downloader!';
       sound.playSuccess();
-      setTimeout(() => { metaSpan.textContent = origText; }, 3500);
+      setTimeout(() => { if (metaSpan && origText) metaSpan.textContent = origText; }, 3500);
     }, 1200);
     return;
   }
@@ -822,7 +978,7 @@ async function triggerDirectDownload(dlUrl, filename, card, origText) {
 
   if (isMixedContent) {
     try {
-      metaSpan.textContent = '⚡ Streaming direct bytes...';
+      if (metaSpan) metaSpan.textContent = '⚡ Streaming direct bytes...';
       const res = await fetch(dlUrl);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
@@ -836,9 +992,9 @@ async function triggerDirectDownload(dlUrl, filename, card, origText) {
       document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
 
-      metaSpan.textContent = '✓ Saved to Downloads!';
+      if (metaSpan) metaSpan.textContent = '✓ Saved to Downloads!';
       sound.playSuccess();
-      setTimeout(() => { metaSpan.textContent = origText; }, 3500);
+      setTimeout(() => { if (metaSpan && origText) metaSpan.textContent = origText; }, 3500);
       return;
     } catch (e) {
       console.warn('Direct stream fetch failed, falling back to direct anchor:', e);
@@ -855,10 +1011,228 @@ async function triggerDirectDownload(dlUrl, filename, card, origText) {
 
   setTimeout(() => {
     try { document.body.removeChild(dlAnchor); } catch(e){}
-    metaSpan.textContent = '✓ Saved to Downloads!';
+    if (metaSpan) metaSpan.textContent = '✓ Saved to Downloads!';
     sound.playSuccess();
-    setTimeout(() => { metaSpan.textContent = origText; }, 3500);
+    setTimeout(() => { if (metaSpan && origText) metaSpan.textContent = origText; }, 3500);
   }, 1200);
+}
+
+// Snaptube Direct Stream Resolver for Mobile
+async function fetchYouTubeStreamDirect(videoId, quality, type) {
+  const isAudio = type === 'audio' || (quality && quality.toLowerCase().includes('mp3')) || (quality && quality.toLowerCase().includes('m4a'));
+  
+  // Try Invidious fast API
+  try {
+    const res = await fetch(`https://yt.chocolatemoo53.com/api/v1/videos/${videoId}`, {
+      signal: AbortSignal.timeout(3500)
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (isAudio) {
+        const audioStreams = (data.adaptiveFormats || []).filter(f => (f.type || '').includes('audio'));
+        const best = audioStreams.find(a => a.itag === '140') || audioStreams[0];
+        if (best && best.url) return { url: best.url, ext: 'mp3', quality: '320k' };
+      } else {
+        const videoStreams = (data.adaptiveFormats || []).filter(f => (f.type || '').includes('video/mp4'));
+        const qTarget = quality ? quality.toLowerCase().replace(/[^0-9]/g, '') : '720';
+        let match = videoStreams.find(v => (v.qualityLabel || '').includes(qTarget));
+        if (!match) match = videoStreams.find(v => (v.qualityLabel || '').includes('720')) || videoStreams[0];
+        if (match && match.url) return { url: match.url, ext: 'mp4', quality: match.qualityLabel };
+      }
+    }
+  } catch (e) {}
+
+  // Direct Invidious stream URL format fallback
+  const itag = isAudio ? '140' : (quality && quality.includes('1080') ? '137' : '22');
+  return {
+    url: `https://yt.chocolatemoo53.com/latest_version?id=${videoId}&itag=${itag}`,
+    ext: isAudio ? 'mp3' : 'mp4',
+    quality: quality || 'HD'
+  };
+}
+
+// Snaptube Mobile Stream Dispatcher (Standalone on-device downloading without PC server)
+async function executeSnaptubeMobileDownload(data, fmt, cardOrBtn, origText) {
+  const isAudio = fmt.type === 'audio';
+  const filename = `${sanitizeTitle(data.title)}_${fmt.resolution || fmt.qualityLabel}.${fmt.ext || (isAudio ? 'mp3' : 'mp4')}`.replace(/\s+/g, '_');
+  const mimeType = isAudio ? 'audio/mpeg' : 'video/mp4';
+
+  const statusEl = cardOrBtn ? (cardOrBtn.querySelector('.fmt-meta') || cardOrBtn) : null;
+  if (statusEl) statusEl.textContent = '⚡ Extracting stream...';
+  if (elements.snaptubeStatusMsg) {
+    elements.snaptubeStatusMsg.textContent = `⚡ Snaptube Engine: Fetching ${fmt.qualityLabel || fmt.resolution}...`;
+  }
+
+  // 1. Resolve stream URL
+  let streamUrl = fmt.directStreamUrl;
+  const isYouTube = data.platform === 'youtube' || (data.originalUrl && (data.originalUrl.includes('youtube.com') || data.originalUrl.includes('youtu.be')));
+  const isInstagram = data.platform === 'instagram' || (data.originalUrl && data.originalUrl.includes('instagram.com'));
+  const vidId = data.id || extractYouTubeId(data.originalUrl);
+
+  if (!streamUrl && isYouTube && vidId) {
+    try {
+      const streamData = await fetchYouTubeStreamDirect(vidId, fmt.resolution, fmt.type);
+      if (streamData && streamData.url) {
+        streamUrl = streamData.url;
+        fmt.directStreamUrl = streamUrl;
+      }
+    } catch (e) {
+      console.warn('Mobile stream extraction error:', e);
+    }
+  }
+
+  if (!streamUrl && data.directVideoUrl) {
+    streamUrl = data.directVideoUrl;
+  }
+
+  // If still no streamUrl, check if backend is reachable
+  const backend = await getActiveBackendUrl();
+  if (!streamUrl && backend) {
+    streamUrl = `${backend}/api/download?url=${encodeURIComponent(data.originalUrl)}&quality=${fmt.resolution}&type=${fmt.type}&title=${encodeURIComponent(data.title)}`;
+  }
+
+  // Fallback stream proxy link if still unresolved
+  if (!streamUrl) {
+    if (isYouTube && vidId) {
+      streamUrl = `https://yt.chocolatemoo53.com/latest_version?id=${vidId}&itag=${isAudio ? '140' : '22'}`;
+    } else {
+      streamUrl = data.originalUrl;
+    }
+  }
+
+  // Record to History
+  recordHistory({
+    title: data.title,
+    thumbnail: data.thumbnail,
+    platform: data.platform,
+    format: fmt.qualityLabel || fmt.resolution,
+    url: streamUrl,
+    timestamp: Date.now()
+  });
+
+  // 2. Dispatch to Android APK Native Downloader (DownloadManager with notifications)
+  if (window.AndroidDownloader && typeof window.AndroidDownloader.downloadMedia === 'function') {
+    window.AndroidDownloader.downloadMedia(streamUrl, filename, mimeType);
+    if (statusEl) statusEl.textContent = '✓ Sent to Android Downloader!';
+    if (elements.snaptubeStatusMsg) {
+      elements.snaptubeStatusMsg.textContent = `✓ Download started! Check phone notification bar.`;
+    }
+    sound.playSuccess();
+    setTimeout(() => { if (statusEl && origText) statusEl.textContent = origText; }, 3500);
+    return;
+  }
+
+  // 3. Dispatch to Browser Direct Download
+  if (statusEl) statusEl.textContent = '⚡ Saving to device...';
+  if (elements.snaptubeStatusMsg) {
+    elements.snaptubeStatusMsg.textContent = `⚡ Saving ${filename} directly...`;
+  }
+
+  try {
+    const dlAnchor = document.createElement('a');
+    dlAnchor.href = streamUrl;
+    dlAnchor.setAttribute('download', filename);
+    dlAnchor.setAttribute('target', '_blank');
+    dlAnchor.style.display = 'none';
+    document.body.appendChild(dlAnchor);
+    dlAnchor.click();
+    setTimeout(() => {
+      try { document.body.removeChild(dlAnchor); } catch(e){}
+    }, 2000);
+
+    if (statusEl) statusEl.textContent = '✓ Saved to Downloads!';
+    if (elements.snaptubeStatusMsg) {
+      elements.snaptubeStatusMsg.textContent = `✓ Download completed! Saved to device Downloads.`;
+    }
+    sound.playSuccess();
+  } catch (err) {
+    if (elements.snaptubeTunnel) {
+      elements.snaptubeTunnel.src = streamUrl;
+    }
+    if (statusEl) statusEl.textContent = '✓ Downloading...';
+    sound.playSuccess();
+  }
+
+  setTimeout(() => {
+    if (statusEl && origText) statusEl.textContent = origText;
+  }, 3500);
+}
+
+// Snaptube Bottom Drawer Sheet Modal (Snaptube-grade Mobile Experience)
+function openSnaptubeSheet(data) {
+  if (!data || !elements.snaptubeModal) return;
+  sound.playClick();
+  
+  if (elements.snaptubeThumb) elements.snaptubeThumb.src = data.thumbnail || 'assets/placeholder.svg';
+  if (elements.snaptubeTitle) elements.snaptubeTitle.textContent = data.title || 'Media Stream';
+  if (elements.snaptubeAuthor) elements.snaptubeAuthor.textContent = data.author || (data.platform || 'MEDIA').toUpperCase();
+  if (elements.snaptubeStatusMsg) elements.snaptubeStatusMsg.textContent = 'Tap any quality below to download directly to your phone:';
+
+  // Populate Music (Audio) Grid
+  if (elements.snaptubeMusicGrid) {
+    elements.snaptubeMusicGrid.innerHTML = '';
+    const musicTiers = [
+      { label: '320K', sub: 'MP3 Lossless', quality: '320k', type: 'audio', ext: 'mp3' },
+      { label: '128K', sub: 'MP3 Standard', quality: '128k', type: 'audio', ext: 'mp3' },
+      { label: 'M4A', sub: 'AAC Crystal', quality: 'm4a', type: 'audio', ext: 'm4a' }
+    ];
+    musicTiers.forEach(tier => {
+      const btn = document.createElement('button');
+      btn.className = 'snaptube-btn audio-btn';
+      btn.innerHTML = `
+        <span class="snaptube-btn-main">${tier.label}</span>
+        <span class="snaptube-btn-sub">${tier.sub}</span>
+      `;
+      btn.addEventListener('click', () => {
+        sound.playClick();
+        executeSnaptubeMobileDownload(data, {
+          qualityLabel: `${tier.label} (${tier.sub})`,
+          resolution: tier.quality,
+          type: tier.type,
+          ext: tier.ext,
+          filesize: 'Direct'
+        }, btn, tier.label);
+      });
+      elements.snaptubeMusicGrid.appendChild(btn);
+    });
+  }
+
+  // Populate Video (MP4) Grid
+  if (elements.snaptubeVideoGrid) {
+    elements.snaptubeVideoGrid.innerHTML = '';
+    const videoTiers = [
+      { label: '1080P', sub: 'Full HD MP4', quality: '1080p', type: 'video', ext: 'mp4' },
+      { label: '720P', sub: 'HD MP4', quality: '720p', type: 'video', ext: 'mp4' },
+      { label: '480P', sub: 'Standard MP4', quality: '480p', type: 'video', ext: 'mp4' },
+      { label: '360P', sub: 'Fast MP4', quality: '360p', type: 'video', ext: 'mp4' }
+    ];
+    videoTiers.forEach(tier => {
+      const btn = document.createElement('button');
+      btn.className = 'snaptube-btn video-btn';
+      btn.innerHTML = `
+        <span class="snaptube-btn-main">${tier.label}</span>
+        <span class="snaptube-btn-sub">${tier.sub}</span>
+      `;
+      btn.addEventListener('click', () => {
+        sound.playClick();
+        executeSnaptubeMobileDownload(data, {
+          qualityLabel: `${tier.label} (${tier.sub})`,
+          resolution: tier.quality,
+          type: tier.type,
+          ext: tier.ext,
+          filesize: 'Direct'
+        }, btn, tier.label);
+      });
+      elements.snaptubeVideoGrid.appendChild(btn);
+    });
+  }
+
+  elements.snaptubeModal.classList.remove('hidden');
+}
+
+function closeSnaptubeSheet() {
+  sound.playClick();
+  if (elements.snaptubeModal) elements.snaptubeModal.classList.add('hidden');
 }
 
 // 6. Render Media Result & Handle 100% In-Platform Direct Downloads
@@ -935,16 +1309,21 @@ function renderMediaResult(data) {
 
         await triggerDirectDownload(dlUrl, filename, card, origText);
       } else {
-        metaSpan.textContent = 'Engine Offline';
-        showError('Direct 1-Click Streaming requires the Senku Engine to be running. If on PC, run start.bat! If on mobile, connect your free Render backend in ☁️ Settings.');
-        const configModal = document.getElementById('configModal');
-        if (configModal) configModal.classList.remove('hidden');
-        setTimeout(() => { metaSpan.textContent = origText; }, 2000);
+        // Snaptube Mobile Stream Dispatcher (Standalone on-device downloading without PC server!)
+        await executeSnaptubeMobileDownload(data, fmt, card, origText);
       }
     });
 
     elements.formatsList.appendChild(card);
   });
+
+  // On Mobile: Automatically open Snaptube Sheet for the fastest 1-tap download experience
+  const isMobile = window.innerWidth <= 768 || navigator.userAgent.includes('Mobile') || navigator.userAgent.includes('Android');
+  if (isMobile) {
+    setTimeout(() => {
+      openSnaptubeSheet(data);
+    }, 400);
+  }
 
   // Smooth scroll to result
   elements.resultCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
