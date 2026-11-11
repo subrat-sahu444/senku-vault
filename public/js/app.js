@@ -110,7 +110,17 @@ const elements = {
   viewsCount: document.getElementById('viewsCount'),
   formatsList: document.getElementById('formatsList'),
   playPreviewBtn: document.getElementById('playPreviewBtn'),
+  previewOverlay: document.getElementById('previewOverlay'),
   inlineVideoPlayer: document.getElementById('inlineVideoPlayer'),
+  inlineIframePlayer: document.getElementById('inlineIframePlayer'),
+  closePreviewBtn: document.getElementById('closePreviewBtn'),
+  theaterPreviewBtn: document.getElementById('theaterPreviewBtn'),
+  mediaLightboxModal: document.getElementById('mediaLightboxModal'),
+  closeLightboxBtn: document.getElementById('closeLightboxBtn'),
+  lightboxTitle: document.getElementById('lightboxTitle'),
+  lightboxBody: document.getElementById('lightboxBody'),
+  lightboxMeta: document.getElementById('lightboxMeta'),
+  lightboxDlBtn: document.getElementById('lightboxDlBtn'),
   copyLinkBtn: document.getElementById('copyLinkBtn'),
   downloadThumbBtn: document.getElementById('downloadThumbBtn'),
   historyToggleBtn: document.getElementById('historyToggleBtn'),
@@ -363,19 +373,38 @@ function setupInputHandlers() {
     });
   }
 
-  // Inline video player toggle
-  elements.playPreviewBtn.addEventListener('click', () => {
-    sound.playClick();
-    if (!state.currentMedia) return;
-    
-    if (state.currentMedia.directVideoUrl) {
-      elements.inlineVideoPlayer.src = state.currentMedia.directVideoUrl;
-      elements.inlineVideoPlayer.classList.remove('hidden');
-      elements.mediaThumbnail.classList.add('hidden');
-      elements.playPreviewBtn.parentElement.classList.add('hidden');
-      elements.inlineVideoPlayer.play();
-    } else {
-      showError('Direct playback preview not available. Use the direct download buttons below to download!');
+  // Media Preview Controls
+  if (elements.playPreviewBtn) {
+    elements.playPreviewBtn.addEventListener('click', () => {
+      startMediaPreview();
+    });
+  }
+
+  if (elements.theaterPreviewBtn) {
+    elements.theaterPreviewBtn.addEventListener('click', () => {
+      openTheaterPreview();
+    });
+  }
+
+  if (elements.closePreviewBtn) {
+    elements.closePreviewBtn.addEventListener('click', () => {
+      stopMediaPreview();
+    });
+  }
+
+  // Lightbox modal close
+  if (elements.closeLightboxBtn && elements.mediaLightboxModal) {
+    elements.closeLightboxBtn.addEventListener('click', closeTheaterModal);
+    elements.mediaLightboxModal.addEventListener('click', (e) => {
+      if (e.target === elements.mediaLightboxModal) closeTheaterModal();
+    });
+  }
+
+  // Close preview on Escape key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      stopMediaPreview();
+      closeTheaterModal();
     }
   });
 
@@ -401,6 +430,172 @@ function setupInputHandlers() {
     a.click();
     document.body.removeChild(a);
   });
+}
+
+// 4. Media Preview Engine (YouTube 4K, Instagram Reels, & Local Stream)
+function extractYouTubeId(url) {
+  if (!url) return null;
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/|live\/))([\w-]{11})/i);
+  return match ? match[1] : null;
+}
+
+function extractInstagramShortcode(url) {
+  if (!url) return null;
+  const match = url.match(/(?:instagram\.com\/(?:p|reel|tv|reels)\/)([\w-]+)/i);
+  return match ? match[1] : null;
+}
+
+// In-Line Media Preview
+function startMediaPreview() {
+  if (!state.currentMedia) return;
+  sound.playClick();
+  const data = state.currentMedia;
+  const isYouTube = data.platform === 'youtube' || (data.originalUrl && (data.originalUrl.includes('youtube.com') || data.originalUrl.includes('youtu.be')));
+  const isInstagram = data.platform === 'instagram' || (data.originalUrl && data.originalUrl.includes('instagram.com'));
+  const ytId = data.id || extractYouTubeId(data.originalUrl);
+  const igCode = extractInstagramShortcode(data.originalUrl);
+
+  // Stop previous preview silently
+  stopMediaPreview(false);
+
+  // 1. YouTube Live Preview
+  if (isYouTube && ytId) {
+    elements.inlineIframePlayer.src = `https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
+    elements.inlineIframePlayer.classList.remove('hidden');
+    elements.mediaThumbnail.classList.add('hidden');
+    elements.previewOverlay.classList.add('hidden');
+    elements.closePreviewBtn.classList.remove('hidden');
+    return;
+  }
+
+  // 2. Direct Video URL (Instagram CDN or native stream)
+  if (data.directVideoUrl) {
+    elements.inlineVideoPlayer.src = data.directVideoUrl;
+    elements.inlineVideoPlayer.classList.remove('hidden');
+    elements.mediaThumbnail.classList.add('hidden');
+    elements.previewOverlay.classList.add('hidden');
+    elements.closePreviewBtn.classList.remove('hidden');
+    elements.inlineVideoPlayer.play().catch(e => console.warn('Autoplay prevented:', e));
+    return;
+  }
+
+  // 3. Instagram Embed Preview
+  if (isInstagram && igCode) {
+    elements.inlineIframePlayer.src = `https://www.instagram.com/p/${igCode}/embed/captioned/`;
+    elements.inlineIframePlayer.classList.remove('hidden');
+    elements.mediaThumbnail.classList.add('hidden');
+    elements.previewOverlay.classList.add('hidden');
+    elements.closePreviewBtn.classList.remove('hidden');
+    return;
+  }
+
+  // 4. Default: Open Theater View
+  openTheaterPreview();
+}
+
+function stopMediaPreview(playSound = true) {
+  if (playSound) sound.playClick();
+  if (elements.inlineVideoPlayer) {
+    elements.inlineVideoPlayer.pause();
+    elements.inlineVideoPlayer.removeAttribute('src');
+    elements.inlineVideoPlayer.load();
+    elements.inlineVideoPlayer.classList.add('hidden');
+  }
+  if (elements.inlineIframePlayer) {
+    elements.inlineIframePlayer.src = '';
+    elements.inlineIframePlayer.classList.add('hidden');
+  }
+  if (elements.mediaThumbnail) {
+    elements.mediaThumbnail.classList.remove('hidden');
+  }
+  if (elements.previewOverlay) {
+    elements.previewOverlay.classList.remove('hidden');
+  }
+  if (elements.closePreviewBtn) {
+    elements.closePreviewBtn.classList.add('hidden');
+  }
+}
+
+// Lightbox Theater Modal Preview
+function openTheaterPreview() {
+  if (!state.currentMedia) return;
+  sound.playClick();
+  const data = state.currentMedia;
+  const isYouTube = data.platform === 'youtube' || (data.originalUrl && (data.originalUrl.includes('youtube.com') || data.originalUrl.includes('youtu.be')));
+  const isInstagram = data.platform === 'instagram' || (data.originalUrl && data.originalUrl.includes('instagram.com'));
+  const ytId = data.id || extractYouTubeId(data.originalUrl);
+  const igCode = extractInstagramShortcode(data.originalUrl);
+
+  elements.lightboxTitle.textContent = data.title;
+  elements.lightboxMeta.textContent = `${(data.platform || 'MEDIA').toUpperCase()} • ${data.durationFormatted || 'HD Preview'}`;
+  elements.lightboxBody.innerHTML = '';
+
+  if (isYouTube && ytId) {
+    elements.lightboxBody.innerHTML = `
+      <iframe src="https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1" 
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+        allowfullscreen></iframe>
+    `;
+  } else if (data.directVideoUrl) {
+    elements.lightboxBody.innerHTML = `
+      <video controls autoplay playsinline src="${data.directVideoUrl}"></video>
+    `;
+  } else if (isInstagram && igCode) {
+    elements.lightboxBody.innerHTML = `
+      <iframe src="https://www.instagram.com/p/${igCode}/embed/captioned/" scrolling="no" allowtransparency="true" allowfullscreen></iframe>
+    `;
+  } else {
+    elements.lightboxBody.innerHTML = `
+      <img src="${data.thumbnail || 'assets/placeholder.svg'}" alt="Preview" />
+    `;
+  }
+
+  // 1-Click download from inside theater
+  elements.lightboxDlBtn.onclick = () => {
+    sound.playClick();
+    const cards = elements.formatsList.querySelectorAll('.format-card');
+    if (cards.length > 0) cards[0].click();
+  };
+
+  elements.mediaLightboxModal.classList.remove('hidden');
+}
+
+function closeTheaterModal() {
+  sound.playClick();
+  if (elements.mediaLightboxModal) {
+    elements.mediaLightboxModal.classList.add('hidden');
+    elements.lightboxBody.innerHTML = '';
+  }
+}
+
+// WhatsApp Status Media Preview
+function openWhatsAppStatusPreview(file, objectUrl, isVideo) {
+  sound.playClick();
+  elements.lightboxTitle.textContent = file.name || 'WhatsApp Status';
+  elements.lightboxMeta.textContent = isVideo ? 'WhatsApp Video Status' : 'WhatsApp Photo Status';
+  elements.lightboxBody.innerHTML = '';
+
+  if (isVideo) {
+    elements.lightboxBody.innerHTML = `
+      <video controls autoplay playsinline loop src="${objectUrl}"></video>
+    `;
+  } else {
+    elements.lightboxBody.innerHTML = `
+      <img src="${objectUrl}" alt="Status Photo" />
+    `;
+  }
+
+  elements.lightboxDlBtn.onclick = () => {
+    sound.playSuccess();
+    const a = document.createElement('a');
+    a.href = objectUrl;
+    a.download = file.name || (isVideo ? 'WhatsApp_Status.mp4' : 'WhatsApp_Status.jpg');
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  elements.mediaLightboxModal.classList.remove('hidden');
 }
 
 // 4. Smart Client-Side Fallback Resolver (No third-party redirects!)
@@ -429,6 +624,7 @@ async function resolveSmartClientMedia(url) {
     const cleanVideoUrl = videoId ? `https://www.youtube.com/watch?v=${videoId}` : url;
 
     return {
+      id: videoId,
       title: title,
       author: author,
       thumbnail: thumb,
@@ -471,6 +667,7 @@ async function resolveSmartClientMedia(url) {
     const shortcode = codeMatch ? codeMatch[1] : 'Reel';
 
     return {
+      id: shortcode,
       title: `Instagram Reel (${shortcode})`,
       author: 'Instagram Creator',
       thumbnail: `https://images.weserv.nl/?url=https://www.instagram.com/p/${shortcode}/media/?size=l`,
@@ -668,13 +865,10 @@ async function triggerDirectDownload(dlUrl, filename, card, origText) {
 function renderMediaResult(data) {
   elements.resultCard.classList.remove('hidden');
 
-  // Thumbnail & Duration
+  // Reset previous preview state & show thumbnail
+  stopMediaPreview(false);
   elements.mediaThumbnail.src = data.thumbnail || 'assets/placeholder.svg';
-  elements.mediaThumbnail.classList.remove('hidden');
-  elements.inlineVideoPlayer.classList.add('hidden');
-  elements.inlineVideoPlayer.pause();
-  elements.playPreviewBtn.parentElement.classList.remove('hidden');
-  elements.mediaDuration.textContent = data.durationFormatted || '00:00';
+  elements.mediaDuration.textContent = data.durationFormatted || 'HD';
 
   // Details
   elements.mediaTitle.textContent = data.title;
@@ -893,7 +1087,8 @@ function handleWhatsAppFiles(files) {
     `;
 
     const saveBtn = overlay.querySelector('.wa-save-btn');
-    saveBtn.addEventListener('click', () => {
+    saveBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
       sound.playClick();
       const a = document.createElement('a');
       a.href = objectUrl;
@@ -902,6 +1097,14 @@ function handleWhatsAppFiles(files) {
       a.click();
       document.body.removeChild(a);
       sound.playSuccess();
+    });
+
+    // Clicking card opens full media preview!
+    card.style.cursor = 'pointer';
+    card.title = 'Click to Preview';
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('.wa-save-btn')) return;
+      openWhatsAppStatusPreview(file, objectUrl, isVideo);
     });
 
     card.appendChild(overlay);
