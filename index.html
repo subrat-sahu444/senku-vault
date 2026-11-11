@@ -162,13 +162,16 @@
               <div class="media-preview-box">
                 <div class="preview-stage" id="previewStage">
                   <img id="mediaThumbnail" src="" alt="Media Thumbnail" class="thumbnail-img" />
-                  <div class="preview-overlay">
-                    <button class="play-preview-btn" id="playPreviewBtn" title="Play Preview">
+                  <div class="preview-overlay" id="previewOverlay">
+                    <button class="play-preview-btn" id="playPreviewBtn" title="Play Video Preview">
                       <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                     </button>
+                    <span class="preview-tooltip">Click to Play Preview</span>
                     <span class="duration-tag" id="mediaDuration">00:00</span>
                   </div>
-                  <video id="inlineVideoPlayer" controls class="inline-video hidden"></video>
+                  <video id="inlineVideoPlayer" controls class="inline-video hidden" playsinline></video>
+                  <iframe id="inlineIframePlayer" class="inline-video hidden" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                  <button class="close-preview-btn hidden" id="closePreviewBtn" title="Close Preview">✕</button>
                 </div>
               </div>
 
@@ -199,6 +202,10 @@
                 </div>
 
                 <div class="extra-actions">
+                  <button class="secondary-btn" id="theaterPreviewBtn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    <span>Play Preview</span>
+                  </button>
                   <button class="secondary-btn" id="copyLinkBtn">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                     <span>Copy Video URL</span>
@@ -473,6 +480,23 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Media Lightbox Theater Modal -->
+    <div class="glass-modal-backdrop hidden" id="mediaLightboxModal">
+      <div class="theater-modal">
+        <div class="theater-header">
+          <h3 id="lightboxTitle">Media Preview</h3>
+          <button class="close-modal-btn" id="closeLightboxBtn">&times;</button>
+        </div>
+        <div class="theater-body" id="lightboxBody">
+          <!-- Dynamically populated video/iframe/image -->
+        </div>
+        <div class="theater-footer">
+          <span id="lightboxMeta" class="theater-meta">Lossless Stream Preview</span>
+          <button class="small-glow-btn" id="lightboxDlBtn">⚡ Direct Download</button>
         </div>
       </div>
     </div>
